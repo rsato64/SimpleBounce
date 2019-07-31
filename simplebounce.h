@@ -1,6 +1,5 @@
-//#include<iostream>
-//#include<cmath>
-//using namespace std;
+
+double integral(const double* integrand, double dr, int n);
 
 class scalarfield{
   protected:
@@ -19,29 +18,24 @@ class scalarfield{
 class genericModel{
   public:
 	int nphi;
-	//double dvdphi[1];
 	double* dvdphi;
-	/*genericModel();
-	virtual double vpot(const double*);
-	virtual void calcDvdphi(const double*);*/
-genericModel(){
-}
-virtual double vpot(const double* phi){
-	return 0.;
-}
-virtual void calcDvdphi(const double* phi){
-	dvdphi[0] = -1.;
-}
+	genericModel(){
+	}
+	virtual double vpot(const double* phi){
+		std::cerr << "!!! vpot is not overrode !!!" << std::endl;
+		return 0.;
+	}
+	virtual void calcDvdphi(const double* phi){
+		std::cerr << "!!! calcDvdphi is not overrode !!!" << std::endl;
+	}
 };
 
 
 class bounce : public scalarfield {
   public:
-	//bounce(int nphi_, int n_, int rmax_, int dim_);
 	bounce(int n_, int rmax_, int dim_);
 	~bounce();
 	void changeN(int n_);
-	//void setPotential( double (*vpot_)(const double*), void (*dvdphi_)(double*, const double*) );
 	void setModel(genericModel*);
 	double t();
 	double v();
@@ -56,15 +50,13 @@ class bounce : public scalarfield {
 	double derivativeAtBoundary();
 	double evolveUntil(double tend);
 	int solve();
-	int refine(double);
+	int refine(double dt);
 	double getlambda();
 	void printBounce();
 
   private:
 	double* RHS;
 	double lambda;
-	double (*vpot)(const double*);
-	void (*dvdphi)(double*, const double*);
 	double* phiTV;
 	double* phiFV;
 	genericModel* model;

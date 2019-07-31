@@ -10,6 +10,30 @@ const double derivMax = 1e-2;
 const double tend0 = 0.1;
 const double tend1 = 1.0;
 
+double integral(const double *integrand, const double dr, const int n){
+	double result = 0.;
+
+#ifndef SIMPSON
+	// trapezoidal rule
+	for(int i=0; i<n-1; i++){
+		result += (integrand[i] + integrand[i+1])*dr/2.;
+	}
+#endif
+
+#ifdef SIMPSON
+	// Simpson's rule
+	for(int i=0; 2*i+2<n; i++){
+		result += (integrand[2*i] + 4.*integrand[2*i+1] + integrand[2*i+2])*dr/6.;
+	}
+	for(int i=n-1-((n-1)%2); i<n-1; i++){
+		result += (integrand[i] + integrand[i+1])*dr/2.;
+	}
+#endif
+	
+	return result;
+}
+
+
 /*class scalarfield{
   protected:
 	double* phi;
@@ -36,8 +60,11 @@ const double tend1 = 1.0;
 	void scalarfield::set(int i, int iphi, double phi_){
 		phi[i*nphi + iphi] = phi_;
 	}
+
 	// \nabla^2 \phi
 	double scalarfield::lap(int i, int iphi) {
+
+#ifndef LAPLACIAN2
 		if(i==0){
 			return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])/dr/dr* dim;
 		} else if (i==n-1){
@@ -47,6 +74,34 @@ const double tend1 = 1.0;
 			return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
 					+ (phi[(i+1)*nphi + iphi] - phi[(i-1)*nphi + iphi])/2./dr * (dim-1.)/r(i);
 		}
+#endif
+
+#ifdef LAPLACIAN2
+		if(i==0){
+			return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])/dr/dr* dim;
+		} else if(i==1){
+			return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
+					+ ( -1.*phi[(i+2)*nphi + iphi]
+						+6.*phi[(i+1)*nphi + iphi]
+						-3.*phi[ i   *nphi + iphi]
+						-2.*phi[(i-1)*nphi + iphi] )/6./dr * (dim-1.)/r(i);
+		} else if (i==n-1){
+			return (                       - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
+					+ (                       - phi[(i-1)*nphi + iphi])/2./dr * (dim-1.)/r(i);
+		} else if (i==n-2){
+			return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
+					+ ( 2.*phi[(i+1)*nphi + iphi]
+						+3.*phi[ i   *nphi + iphi]
+						-6.*phi[(i-1)*nphi + iphi]
+						+1.*phi[(i-2)*nphi + iphi] )/6./dr * (dim-1.)/r(i);
+		} else {
+			return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
+					+ ( -1.*phi[(i+2)*nphi + iphi]
+						+8.*phi[(i+1)*nphi + iphi]
+						-8.*phi[(i-1)*nphi + iphi]
+						+   phi[(i-2)*nphi + iphi] )/12./dr * (dim-1.)/r(i);
+		}
+#endif
 	}
 //};
 
@@ -139,11 +194,7 @@ void genericModel::calcDvdphi(const double* phi){
 				integrand[i] += r_dminusoneth[i] * -0.5 * phi[i*nphi+iphi] * lap(i,iphi);
 			}
 		}
-		double integral = 0.;
-		for(int i=0; i<n-1; i++){
-			integral += (integrand[i] + integrand[i+1])/2. * dr;
-		}
-		return integral;	
+		return integral(integrand, dr, n);
 	}
 
 	// potential energy : \int_0^\infty dr r^{d-1} V(\phi)
@@ -153,12 +204,7 @@ void genericModel::calcDvdphi(const double* phi){
 			//integrand[i] = pow(r(i),dim-1) * model->vpot(&phi[i*nphi]);
 			integrand[i] = r_dminusoneth[i] * model->vpot(&phi[i*nphi]);
 		}
-		double integral = 0.;
-		integral = 0.;
-		for(int i=0; i<n-1; i++){
-			integral += (integrand[i] + integrand[i+1])/2. * dr;
-		}
-		return integral;	
+		return integral(integrand, dr, n);
 	}
 
 	// evolve the configuration by ds
@@ -172,26 +218,16 @@ void genericModel::calcDvdphi(const double* phi){
 			integrand2[i] = 0.;
 			model->calcDvdphi(&phi[i*nphi]);
 			for(int iphi=0; iphi<nphi; iphi++){
-				//integrand1[i] += pow(r(i),dim-1) * model->dvdphi[iphi] * lap(i,iphi);
-				//integrand2[i] += pow(r(i),dim-1) * model->dvdphi[iphi] * model->dvdphi[iphi];
+				// r_dminusoneth[i] = pow(r(i),dim-1)
 				integrand1[i] += r_dminusoneth[i] * model->dvdphi[iphi] * lap(i,iphi);
 				integrand2[i] += r_dminusoneth[i] * model->dvdphi[iphi] * model->dvdphi[iphi];
 			}
 		}
-		double integral1 = 0.;
-		double integral2 = 0.;
-		integral1 = 0.;
-		integral2 = 0.;
-		for(int i=0; i<n-1; i++){
-			integral1 += (integrand1[i] + integrand1[i+1])/2. * dr;
-			integral2 += (integrand2[i] + integrand2[i+1])/2. * dr;
-		}
-		
+
 		// Eq. 9 of 1907.02417
-		lambda = integral1 / integral2;
+		lambda = integral(integrand1,dr,n) / integral(integrand2,dr,n);
 
 		// RHS of Eq. 8 of 1907.02417
-		//double RHS[n*nphi];
 		for(int i=0; i<n; i++){
 			model->calcDvdphi(&phi[i*nphi]);
 			for(int iphi=0; iphi<nphi; iphi++){
@@ -410,11 +446,26 @@ void genericModel::calcDvdphi(const double* phi){
 				phi[(2*i)*nphi + iphi] = dummy[i*nphi + iphi];
 			}
 		}
-		for(int i=0; i<nold-1; i++){
+
+
 			for(int iphi=0; iphi<nphi; iphi++){
-				phi[(2*i+1)*nphi + iphi] = (dummy[i*nphi + iphi] + dummy[(i+1)*nphi + iphi])/2.;
+				phi[1*nphi + iphi] = (3.*dummy[0*nphi + iphi] + dummy[1*nphi + iphi])/4.;
+			}
+		for(int i=1; i<nold-2; i++){
+			for(int iphi=0; iphi<nphi; iphi++){
+				//phi[(2*i+1)*nphi + iphi] = (dummy[i*nphi + iphi] + dummy[(i+1)*nphi + iphi])/2.;
+				phi[(2*i+1)*nphi + iphi] = (
+									-1.*dummy[(i-1)*nphi + iphi]
+									+ 9.*dummy[ i   *nphi + iphi]
+									+ 9.*dummy[(i+1)*nphi + iphi]
+									- 1.*dummy[(i+2)*nphi + iphi]
+									)/16.;
 			}
 		}
+			for(int iphi=0; iphi<nphi; iphi++){
+				phi[(2*nold-3)*nphi + iphi] = (dummy[(nold-2)*nphi + iphi] + dummy[(nold-1)*nphi + iphi])/2.;
+			}
+
 		evolveUntil(dt);
 	}
 
@@ -450,8 +501,6 @@ void genericModel::calcDvdphi(const double* phi){
 /*  private:
 	double* RHS;
 	double lambda;
-	double (*vpot)(const double*);
-	void (*dvdphi)(double*, const double*);
 	double* phiTV;
 	double* phiFV;
 };*/
