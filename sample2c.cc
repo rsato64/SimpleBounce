@@ -1,3 +1,5 @@
+// table 1 (2 fields) of 1901.03714
+
 #include<iostream>
 #include<cmath>
 #include"simplebounce.h"
@@ -56,7 +58,7 @@ int main() {
 
 	int n = 100; // number of grid
 	double rmax = 1.; // number of space dimension 
-	int dim = 4; // phi(rmax) = phi(False vacuum)
+	int dim = 3; // phi(rmax) = phi(False vacuum)
 
 	bounce c(n, rmax, dim);
 	model2 Model;
