@@ -40,7 +40,7 @@ double integral(const double *integrand, const double dr, const int n){
 	int n, nphi, dim;
 	double rmax, dr;
   public:*/
-	scalarfield::scalarfield(int nphi_, int n_, int rmax_, int dim_) {
+	scalarfield::scalarfield(const int nphi_, const int n_, const int rmax_, const int dim_) {
 		phi = new double[n_*nphi_];
 		n = n_;
 		nphi = nphi_;
@@ -51,18 +51,18 @@ double integral(const double *integrand, const double dr, const int n){
 	scalarfield::~scalarfield(){
 		delete[] phi;
 	}
-	double scalarfield::r(int i) {
+	double scalarfield::r(const int i) const {
 		return dr*i;
 	}
-	double scalarfield::val(int i, int iphi) {
+	double scalarfield::val(const int i, const int iphi) const {
 		return phi[i*nphi + iphi];
 	}
-	void scalarfield::set(int i, int iphi, double phi_){
+	void scalarfield::set(const int i, const int iphi, const double phi_){
 		phi[i*nphi + iphi] = phi_;
 	}
 
 	// \nabla^2 \phi
-	double scalarfield::lap(int i, int iphi) {
+	double scalarfield::lap(const int i, const int iphi) const {
 
 #ifndef LAPLACIAN2
 		if(i==0){
@@ -119,8 +119,7 @@ void genericModel::calcDvdphi(const double* phi){
 
 /*class bounce : public scalarfield {
   public:*/
-	//bounce::bounce(int nphi_, int n_, int rmax_, int dim_) : scalarfield(nphi_, n_, rmax_, dim_) {
-	bounce::bounce(int n_, int rmax_, int dim_) : scalarfield(1, n_, rmax_, dim_) {
+	bounce::bounce(const int n_, const int rmax_, const int dim_) : scalarfield(1, n_, rmax_, dim_) {
 		int nphi_=1;
 		RHS = new double[n_*nphi_];
 		phiTV = new double[nphi_];
@@ -129,7 +128,6 @@ void genericModel::calcDvdphi(const double* phi){
 		std::cerr << std::endl;
 		std::cerr << "Initialized"<< std::endl;
 		std::cerr << "\tnumber of grids :\t" << n_ << std::endl;
-		//std::cerr << "\tnumber of fields :\t" << nphi_ << std::endl;
 		std::cerr << "\tmaximum radius :\t" << rmax_ << std::endl;
 		std::cerr << "\tgrid spacing :\t" << dr << std::endl;
 		std::cerr << "\tdimensions :\t" << dim_ << std::endl;
@@ -147,7 +145,7 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// change the number of grid. grid spacing dr is consistently changed.
-	void bounce::changeN(int n_){
+	void bounce::changeN(const int n_){
 		std::cerr << std::endl;
 		std::cerr << "number of grids has been changed."<< std::endl;
 		std::cerr << "\t(n,dr) : (" << n << ", " << dr << ")\t->\t";
@@ -167,7 +165,7 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// set scalar potential and its derivatives to be used for the bounce calculation
-	void bounce::setModel(genericModel* model_){
+	void bounce::setModel(genericModel * const model_){
 		model = model_;
 		nphi = model_->nphi;
 		delete[] phi;
@@ -185,12 +183,11 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// kinetic energy : \int_0^\infty dr r^{d-1} \sum_i (-1/2) \phi_i \nabla^2\phi_i
-	double bounce::t(){
+	double bounce::t() const {
 		double integrand[n];
 		for(int i=0; i<n; i++){
 			integrand[i] = 0.;
 			for(int iphi=0; iphi<nphi; iphi++){
-				//integrand[i] += pow(r(i),dim-1) * -0.5 * phi[i*nphi+iphi] * lap(i,iphi);
 				integrand[i] += r_dminusoneth[i] * -0.5 * phi[i*nphi+iphi] * lap(i,iphi);
 			}
 		}
@@ -198,17 +195,16 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// potential energy : \int_0^\infty dr r^{d-1} V(\phi)
-	double bounce::v(){
+	double bounce::v() const{
 		double integrand[n];
 		for(int i=0; i<n; i++){
-			//integrand[i] = pow(r(i),dim-1) * model->vpot(&phi[i*nphi]);
 			integrand[i] = r_dminusoneth[i] * model->vpot(&phi[i*nphi]);
 		}
 		return integral(integrand, dr, n);
 	}
 
 	// evolve the configuration by ds
-	double bounce::evolve(double ds){
+	double bounce::evolve(const double ds){
 
 		// integral1 : \int_0^\infty dr r^{d-1} \sum_i (\partial V / \partial\phi_i) \nabla^2\phi_i
 		// integral2 : \int_0^\infty dr r^{d-1} \sum_i (\partial V / \partial\phi_i)^2
@@ -256,31 +252,31 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// RHS of Eq. 8 of 1907.02417
-	double bounce::residual(int i, int iphi){
+	double bounce::residual(const int i, const int iphi) const{
 		model->calcDvdphi(&phi[i*nphi]);
 		return lap(i,iphi) - lambda*model->dvdphi[iphi];
 	}
 
 	// RHS of EOM for the bounce solution
-	double bounce::residualBounce(int i, int iphi){
+	double bounce::residualBounce(const int i, const int iphi) const{
 		model->calcDvdphi(&phi[i*nphi]);
 		return lap(i,iphi)/lambda - model->dvdphi[iphi];
 	}
 
 	// Euclidean action in d-dimensional space 
-	double bounce::action(){
+	double bounce::action() const{
 		double area = dim * pow(M_PI,dim/2.) / tgamma(dim/2.+1.);
 		double rescaled_t_plus_v = pow(lambda, dim/2.-1.)*t() + pow(lambda, dim/2.)*v();
 		return area * rescaled_t_plus_v;
 	}
 
 	// boucne solution from scale transformation
-	double bounce::rBounce(int i){
+	double bounce::rBounce(const int i) const{
 		return sqrt(lambda)*dr*i;
 	}
 
 	// set the posiiton of true and false vacua
-	int bounce::setVacuum(double *phiTV_, double *phiFV_){
+	int bounce::setVacuum(const double *phiTV_, const double *phiFV_){
 		if(model->vpot(phiTV_) > model->vpot(phiFV_) ){
 			std::cerr << "!!! energy of true vacuum is larger than false vacuum !!!" << std::endl;
 			return -1;
@@ -313,7 +309,7 @@ void genericModel::calcDvdphi(const double* phi){
 	};
 
 	// set the initial configuration
-	void bounce::setInitial(double frac, double width){
+	void bounce::setInitial(const double frac, const double width){
 		for(int i=0; i<n; i++){
 			for(int iphi=0; iphi<nphi; iphi++){
 				phi[i*nphi+iphi] = phiTV[iphi] + (phiFV[iphi]-phiTV[iphi])*(1.+tanh( (i-n*frac)/(n*width) ))/2.;
@@ -322,7 +318,7 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// field excursion from the origin to the infinity
-	double bounce::fieldExcursion(){
+	double bounce::fieldExcursion() const{
 		double normsquared = 0.;
 		for(int iphi=0; iphi<nphi; iphi++){
 			normsquared += pow(phi[(n-1)*nphi+iphi] - phi[0*nphi+iphi], 2);
@@ -331,7 +327,7 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// derivative of scalar field at boundary
-	double bounce::derivativeAtBoundary(){
+	double bounce::derivativeAtBoundary() const{
 		double normsquared = 0.;
 		for(int iphi=0; iphi<nphi; iphi++){
 			normsquared += pow(phi[(n-1)*nphi+iphi] - phi[(n-2)*nphi+iphi], 2);
@@ -340,7 +336,7 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 	// evolve the configuration
-	double bounce::evolveUntil(double tend){
+	double bounce::evolveUntil(const double tend){
 		double t = 0.;
 		double dt = 2./(1. + dim + sqrt(1.+dim)) * pow(r(1),2) * safetyfactor;
 		std::cerr << std::endl;
@@ -433,7 +429,7 @@ void genericModel::calcDvdphi(const double* phi){
 		return 0;
 	}
 
-	int bounce::refine(double dt){
+	int bounce::refine(const double dt){
 		int nold = n;
 		double *dummy;
 		dummy = new double[n*nphi];
@@ -470,12 +466,12 @@ void genericModel::calcDvdphi(const double* phi){
 	}
 
 
-	double bounce::getlambda(){
+	double bounce::getlambda() const{
 		return lambda;
 	}
 
 	// print the result
-	void bounce::printBounce(){
+	void bounce::printBounce() const{
 		std::cout << "# ";
 		std::cout << "r\t";
 		for(int iphi=0; iphi<nphi; iphi++){

@@ -18,7 +18,7 @@ class model2 : public genericModel{
 	}
 
 	// potential of scalar field(s)
-	double vpot(const double* phi){
+	double vpot(const double* phi) const{
 		double r1 = phi[0]*phi[0] + 5.*phi[1]*phi[1];
 		double r2 = 5.*(phi[0]-1.)*(phi[0]-1.) + (phi[1]-1.)*(phi[1]-1.);
 		double r3 = c*( phi[1]*phi[1]*phi[1]*phi[1]/4. -  phi[1]*phi[1]*phi[1]/3. );
@@ -26,7 +26,7 @@ class model2 : public genericModel{
 	}
 
 	// derivative of potential of scalar field(s)
-	void calcDvdphi(const double* phi){
+	void calcDvdphi(const double* phi) const{
 		double r1 = phi[0]*phi[0] + 5.*phi[1]*phi[1];
 		double r2 = 5.*(phi[0]-1.)*(phi[0]-1.) + (phi[1]-1.)*(phi[1]-1.);
 		double dr1dx = 2.*phi[0];

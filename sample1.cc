@@ -14,10 +14,10 @@ class model1 : public genericModel{
 	~model1(){
 		delete[] dvdphi;
 	}
-	double vpot (const double* phi){
+	double vpot (const double* phi) const{
 		return phi[0]*phi[0]/2. - phi[0]*phi[0]*phi[0]/3.;
 	}
-	void calcDvdphi(const double *phi){
+	void calcDvdphi(const double *phi) const{
 		dvdphi[0] = phi[0] - phi[0]*phi[0];
 	}
 };
