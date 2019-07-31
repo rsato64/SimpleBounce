@@ -1,3 +1,5 @@
+// Eq 16 and Fig 2 of 1907.02417
+
 #include<iostream>
 #include<cmath>
 #include"simplebounce.h"
