@@ -436,7 +436,8 @@ void genericModel::calcDvdphi(const double* phi){
 		for(int i=0; i<n*nphi; i++){
 			dummy[i] = phi[i];
 		}
-		changeN(2*n-1);
+		//changeN(2*n-1);
+		changeN(2*n);
 		for(int i=0; i<nold; i++){
 			for(int iphi=0; iphi<nphi; iphi++){
 				phi[(2*i)*nphi + iphi] = dummy[i*nphi + iphi];
@@ -444,12 +445,11 @@ void genericModel::calcDvdphi(const double* phi){
 		}
 
 
-			for(int iphi=0; iphi<nphi; iphi++){
-				phi[1*nphi + iphi] = (3.*dummy[0*nphi + iphi] + dummy[1*nphi + iphi])/4.;
-			}
+		for(int iphi=0; iphi<nphi; iphi++){
+			phi[1*nphi + iphi] = (3.*dummy[0*nphi + iphi] + dummy[1*nphi + iphi])/4.;
+		}
 		for(int i=1; i<nold-2; i++){
 			for(int iphi=0; iphi<nphi; iphi++){
-				//phi[(2*i+1)*nphi + iphi] = (dummy[i*nphi + iphi] + dummy[(i+1)*nphi + iphi])/2.;
 				phi[(2*i+1)*nphi + iphi] = (
 									-1.*dummy[(i-1)*nphi + iphi]
 									+ 9.*dummy[ i   *nphi + iphi]
@@ -458,9 +458,12 @@ void genericModel::calcDvdphi(const double* phi){
 									)/16.;
 			}
 		}
-			for(int iphi=0; iphi<nphi; iphi++){
-				phi[(2*nold-3)*nphi + iphi] = (dummy[(nold-2)*nphi + iphi] + dummy[(nold-1)*nphi + iphi])/2.;
-			}
+		for(int iphi=0; iphi<nphi; iphi++){
+			phi[(2*nold-3)*nphi + iphi] = (dummy[(nold-2)*nphi + iphi] + dummy[(nold-1)*nphi + iphi])/2.;
+		}
+		for(int iphi=0; iphi<nphi; iphi++){
+			phi[(2*nold-1)*nphi + iphi] = (dummy[(nold-1)*nphi + iphi] + phiFV[iphi])/2.;
+		}
 
 		evolveUntil(dt);
 	}
