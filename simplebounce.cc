@@ -1,14 +1,7 @@
 #include<iostream>
 #include<cmath>
+//#include<algorithm>
 #include"simplebounce.h"
-
-const double safetyfactor = 0.9;
-const double maximumvariation = 0.01;
-const double xTV0 = 0.5;
-const double width0 = 0.05;
-const double derivMax = 1e-2;
-const double tend0 = 0.1;
-const double tend1 = 0.5;
 
 double integral(const double *integrand, const double dr, const int n){
 	double result = 0.;
@@ -114,6 +107,15 @@ bounce::bounce(const int n_, const int rmax_, const int dim_) : scalarfield(1, n
 	}
 	setModelDone = false;
 	setVacuumDone = false;
+
+	// parameters for numerical calculation
+	safetyfactor = 0.9;
+	maximumvariation = 0.01;
+	xTV0 = 0.5;
+	width0 = 0.05;
+	derivMax = 1e-2;
+	tend0 = 0.1;
+	tend1 = 0.5;
 
 	// these part will be updated by setModel
 	nphi = 1;
@@ -323,7 +325,8 @@ double bounce::fieldExcursion() const{
 double bounce::derivativeAtBoundary() const{
 	double normsquared = 0.;
 	for(int iphi=0; iphi<nphi; iphi++){
-		normsquared += pow(phi[(n-1)*nphi+iphi] - phi[(n-2)*nphi+iphi], 2);
+		//normsquared += pow(phi[(n-1)*nphi+iphi] - phi[(n-2)*nphi+iphi], 2);
+		normsquared += pow(phiFV[iphi] - phi[(n-1)*nphi+iphi], 2);
 	}
 	return sqrt(normsquared)/dr;
 }

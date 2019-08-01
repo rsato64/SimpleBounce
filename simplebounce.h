@@ -63,5 +63,14 @@ class bounce : public scalarfield {
 	double* r_dminusoneth;
 	bool setModelDone;
 	bool setVacuumDone;
+
+	// parameters for numerical calculation
+	double safetyfactor;
+	double maximumvariation;
+	double xTV0;
+	double width0;
+	double derivMax;
+	double tend0;
+	double tend1;
 };
 
