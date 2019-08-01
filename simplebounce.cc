@@ -8,7 +8,7 @@ const double xTV0 = 0.5;
 const double width0 = 0.05;
 const double derivMax = 1e-2;
 const double tend0 = 0.1;
-const double tend1 = 1.0;
+const double tend1 = 0.3;
 
 double integral(const double *integrand, const double dr, const int n){
 	double result = 0.;
@@ -23,7 +23,7 @@ double integral(const double *integrand, const double dr, const int n){
 #ifdef SIMPSON
 	// Simpson's rule
 	for(int i=0; 2*i+2<n; i++){
-		result += (integrand[2*i] + 4.*integrand[2*i+1] + integrand[2*i+2])*dr/6.;
+		result += (integrand[2*i] + 4.*integrand[2*i+1] + integrand[2*i+2])*dr/3.;
 	}
 	for(int i=n-1-((n-1)%2); i<n-1; i++){
 		result += (integrand[i] + integrand[i+1])*dr/2.;
