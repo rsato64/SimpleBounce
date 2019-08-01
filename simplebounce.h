@@ -52,7 +52,7 @@ class bounce : public scalarfield {
 	int solve();
 	int refine(const double dt);
 	double getlambda() const;
-	void printBounce() const;
+	int printBounce() const;
 
   private:
 	double* RHS;
@@ -61,5 +61,7 @@ class bounce : public scalarfield {
 	double* phiFV;
 	genericModel* model;
 	double* r_dminusoneth;
+	bool setModelDone;
+	bool setVacuumDone;
 };
 
