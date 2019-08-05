@@ -46,6 +46,7 @@ int main() {
 
 	// Euclidean action
 	cerr << "S_E = " << c.action() << endl;
+	cerr << "error of S_E = " << c.actionError() << endl;
 
 	return 0;
 }

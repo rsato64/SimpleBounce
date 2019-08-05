@@ -256,6 +256,25 @@ double bounce::action() const{
 	return area * rescaled_t_plus_v;
 }
 
+// guess error of action from discretization : error of SE is assumed to be order of dr^m.
+double bounce::actionError() const {
+#ifndef LAPLACIAN2
+	int m = 1;
+#endif
+#ifdef LAPLACIAN2
+	int m = 2;
+#endif
+	double integrand[n];
+	for(int i=0; i<n-1; i++){
+		integrand[i] = 0.;
+		for(int iphi=0; iphi<nphi; iphi++){
+			integrand[i] += pow(r(i),dim-1) * pow( (phi[(i+1)*nphi+iphi]-phi[i*nphi+iphi])/dr , 2) * pow( (phi[(i+1)*nphi+iphi]-phi[i*nphi+iphi])/dr * dr / fieldExcursion() , m);
+		}
+	}
+	return fabs( integral(integrand, dr, n)/t() * action() );
+}
+
+
 // boucne solution from scale transformation
 double bounce::rBounce(const int i) const{
 	return sqrt(lambda)*dr*i;

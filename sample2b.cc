@@ -44,7 +44,7 @@ class model2 : public genericModel{
 
 int main() {
 
-	int n = 100; // number of grid
+	int n = 200; // number of grid
 	double rmax = 1.; // phi(rmax) = phi(False vacuum)
 	int dim = 3; // number of space dimension 
 
@@ -64,6 +64,7 @@ int main() {
 
 	// Euclidean action
 	cerr << "S_E = " << c.action() << endl;
+	cerr << "error of S_E = " << c.actionError() << endl;
 
 
 	return 0;

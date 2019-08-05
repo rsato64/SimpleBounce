@@ -83,6 +83,7 @@ int main() {
 
 	// Euclidean action
 	cerr << c.action() << endl;
+	cerr << "error of S_E = " << c.actionError() << endl;
 
 	return 0;
 }

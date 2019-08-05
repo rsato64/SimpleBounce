@@ -44,6 +44,10 @@ int main() {
 	// show the results
 	c.printBounce();
 
+
+	cerr << "S_E = " << c.action() << endl;
+	cerr << "error of S_E = " << c.actionError() << endl;
+
 	return 0;
 }
 
