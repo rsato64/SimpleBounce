@@ -6,14 +6,14 @@ double integral(const double *integrand, const double dr, const int n){
 	double result = 0.;
 
 #ifndef SIMPSON
-	// trapezoidal rule
+	// integral by trapezoidal rule
 	for(int i=0; i<n-1; i++){
 		result += (integrand[i] + integrand[i+1])*dr/2.;
 	}
 #endif
 
 #ifdef SIMPSON
-	// Simpson's rule
+	// integral by Simpson's rule
 	for(int i=0; 2*i+2<n; i++){
 		result += (integrand[2*i] + 4.*integrand[2*i+1] + integrand[2*i+2])*dr/3.;
 	}
@@ -47,10 +47,11 @@ void scalarfield::set(const int i, const int iphi, const double phi_){
 	phi[i*nphi + iphi] = phi_;
 }
 
-// \nabla^2 \phi
+// \nabla^2 \phi = d^2 phi / dr^2 + (d-1)/r * dphi/dr
 double scalarfield::lap(const int i, const int iphi) const {
 
 #ifndef LAPLACIAN2
+	// the most naive laplacian
 	if(i==0){
 		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])/dr/dr* dim;
 	} else if (i==n-1){
@@ -63,6 +64,7 @@ double scalarfield::lap(const int i, const int iphi) const {
 #endif
 
 #ifdef LAPLACIAN2
+	// dphi/dr is refined
 	if(i==0){
 		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])/dr/dr* dim;
 	} else if(i==1){
@@ -398,6 +400,7 @@ int bounce::solve(){
 		return -1;
 	}
 
+
 	// make the bubble wall thin to get negative potential energy 
 	if(verbose){
 		std::cerr << "========================================" << std::endl;
@@ -405,7 +408,6 @@ int bounce::solve(){
 		std::cerr << "probing a thickness to get negative V[phi] ..." << std::endl;
 		std::cerr << std::endl;
 	}
-
 	double xTV = xTV0;
 	double width = width0;
 	while(true){
@@ -418,9 +420,12 @@ int bounce::solve(){
 			std::cerr << "\t" << std::endl;
 		}
 
+		// OK if V is negative
 		if(v() < 0.) {
 			break;
 		}
+
+		// if V is positive, make the wall thin.
 		width = width * 0.5;
 		if(width*n < 1.) {
 			if(verbose){
@@ -448,10 +453,13 @@ int bounce::solve(){
 			std::cerr << "\t" << std::endl;
 		}
 
+		// dphi/dr at the boundary is small enough
 		if( deriv  < derivMax) {
 			break;
+		// dphi/dr at the boundary is NOT small enough
 		} else {
 
+			// take smaller bounce configuration
 			if(verbose){
 				std::cerr << std::endl;
 				std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
@@ -468,6 +476,7 @@ int bounce::solve(){
 				setN(2*n);
 			}
 
+			// retry by using new initial condition
 			setInitial(xTV, width);
 			if(verbose){
 				std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;

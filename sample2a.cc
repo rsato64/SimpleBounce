@@ -63,7 +63,7 @@ int main() {
 	c.printBounce();
 
 	// Euclidean action
-	cerr << "S_E = " << c.action() << endl;
+	cout << "S_E = " << c.action() << endl;
 
 
 	return 0;

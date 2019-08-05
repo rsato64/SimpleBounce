@@ -1,7 +1,7 @@
 // Eq 16 and Fig 2 of 1907.02417
 
 #include<iostream>
-#include<cmath>
+//#include<cmath>
 #include"simplebounce.h"
 using namespace std;
 
@@ -45,7 +45,7 @@ int main() {
 	c.printBounce();
 
 
-	cerr << "S_E = " << c.action() << endl;
+	cout << "S_E = " << c.action() << endl;
 
 	return 0;
 }
