@@ -1,6 +1,5 @@
 #include<iostream>
 #include<cmath>
-//#include<algorithm>
 #include"simplebounce.h"
 
 double integral(const double *integrand, const double dr, const int n){
@@ -92,21 +91,23 @@ double scalarfield::lap(const int i, const int iphi) const {
 }
 
 
-bounce::bounce(const int n_, const int rmax_, const int dim_) : scalarfield(1, n_, rmax_, dim_) {
-	std::cerr << "========================================" << std::endl;
-	std::cerr << std::endl;
-	std::cerr << "Initialized"<< std::endl;
-	std::cerr << "\tnumber of grids :\t" << n_ << std::endl;
-	std::cerr << "\tmaximum radius :\t" << rmax_ << std::endl;
-	std::cerr << "\tgrid spacing :\t" << dr << std::endl;
-	std::cerr << "\tdimensions :\t" << dim_ << std::endl;
-	std::cerr << std::endl;
-	r_dminusoneth = new double[n_];
-	for(int i=0; i<n_; i++){
+bounce::bounce() : scalarfield(1, 100, 1., 4) {
+	n = 100;
+	rmax = 1.;
+	dim = 4;
+	nphi = 1;
+	RHS = new double[n*nphi];
+	phiTV = new double[nphi];
+	phiFV = new double[nphi];
+	r_dminusoneth = new double[n];
+	for(int i=0; i<n; i++){
 		r_dminusoneth[i] = pow(r(i),dim-1);
 	}
+
+	// flags
 	setModelDone = false;
 	setVacuumDone = false;
+	verbose = true;
 
 	// parameters for numerical calculation
 	safetyfactor = 0.9;
@@ -116,13 +117,8 @@ bounce::bounce(const int n_, const int rmax_, const int dim_) : scalarfield(1, n
 	derivMax = 1e-2;
 	tend0 = 0.1;
 	tend1 = 0.5;
-
-	// these part will be updated by setModel
-	nphi = 1;
-	RHS = new double[n_*nphi];
-	phiTV = new double[nphi];
-	phiFV = new double[nphi];
 }
+
 bounce::~bounce(){
 	delete[] RHS;
 	delete[] phiTV;
@@ -130,23 +126,52 @@ bounce::~bounce(){
 	delete[] r_dminusoneth;
 }
 
-// change the number of grid. grid spacing dr is consistently changed.
-void bounce::changeN(const int n_){
-	std::cerr << std::endl;
-	std::cerr << "number of grids has been changed."<< std::endl;
-	std::cerr << "\t(n,dr) : (" << n << ", " << dr << ")\t->\t";
-	delete[] phi;
-	delete[] RHS;
+void bounce::setRmax(const double rmax_){
+	rmax = rmax_;
+	dr = rmax / (n-1.);
+	for(int i=0; i<n; i++){
+		r_dminusoneth[i] = pow(r(i),dim-1);
+	}
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "maximum of radius is set."<< std::endl;
+		std::cerr << "\trmax : " << dim << std::endl;
+		std::cerr << std::endl;
+	}
+}
+
+void bounce::setDimension(const int dim_){
+	dim = dim_;
+	for(int i=0; i<n; i++){
+		r_dminusoneth[i] = pow(r(i),dim-1);
+	}
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "dimension is set."<< std::endl;
+		std::cerr << "\tdim : " << dim << std::endl;
+		std::cerr << std::endl;
+	}
+}
+
+// set the number of grid. grid spacing dr is consistently changed.
+void bounce::setN(const int n_){
 	n = n_;
 	dr = rmax / (n_-1.);
-	std::cerr << "(" << n << ", " << dr << ")" << std::endl;
-	std::cerr << std::endl;
+	delete[] phi;
+	delete[] RHS;
+	delete[] r_dminusoneth;
 	phi = new double[n_*nphi];
 	RHS = new double[n_*nphi];
-	delete[] r_dminusoneth;
 	r_dminusoneth = new double[n_];
 	for(int i=0; i<n_; i++){
 		r_dminusoneth[i] = pow(r(i),dim-1);
+	}
+
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "number of grids is set."<< std::endl;
+		std::cerr << "\t(n,dr) : (" << n << ", " << dr << ")" << std::endl;
+		std::cerr << std::endl;
 	}
 }
 
@@ -162,9 +187,13 @@ void bounce::setModel(genericModel * const model_){
 	phiTV = new double[nphi];
 	phiFV = new double[nphi];
 	RHS = new double[n*nphi];
-	std::cerr << std::endl;
-	std::cerr << "model has been set"<< std::endl;
-	std::cerr << "\tnumber of fields :\t" << nphi << std::endl;
+
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "model has been set"<< std::endl;
+		std::cerr << "\tnumber of fields :\t" << nphi << std::endl;
+	}
+
 	setModelDone = true;
 }
 
@@ -184,7 +213,7 @@ double bounce::t() const {
 double bounce::v() const{
 	double integrand[n];
 	for(int i=0; i<n; i++){
-		integrand[i] = r_dminusoneth[i] * model->vpot(&phi[i*nphi]);
+		integrand[i] = r_dminusoneth[i] * (model->vpot(&phi[i*nphi]) - VFV);
 	}
 	return integral(integrand, dr, n);
 }
@@ -256,24 +285,6 @@ double bounce::action() const{
 	return area * rescaled_t_plus_v;
 }
 
-// guess error of action from discretization : error of SE is assumed to be order of dr^m.
-double bounce::actionError() const {
-#ifndef LAPLACIAN2
-	int m = 1;
-#endif
-#ifdef LAPLACIAN2
-	int m = 2;
-#endif
-	double integrand[n];
-	for(int i=0; i<n-1; i++){
-		integrand[i] = 0.;
-		for(int iphi=0; iphi<nphi; iphi++){
-			integrand[i] += pow(r(i),dim-1) * pow( (phi[(i+1)*nphi+iphi]-phi[i*nphi+iphi])/dr , 2) * pow( (phi[(i+1)*nphi+iphi]-phi[i*nphi+iphi])/dr * dr / fieldExcursion() , m);
-		}
-	}
-	return fabs( integral(integrand, dr, n)/t() * action() );
-}
-
 
 // boucne solution from scale transformation
 double bounce::rBounce(const int i) const{
@@ -299,24 +310,29 @@ int bounce::setVacuum(const double *phiTV_, const double *phiFV_){
 	for(int iphi=0; iphi<nphi; iphi++){
 		phiFV[iphi] = phiFV_[iphi];
 	}
-	std::cerr << std::endl;
-	std::cerr << "true and false vacua have been set." << std::endl;
 
-	std::cerr << "\tfalse vacuum : ";
-	std::cerr << "(";
-	for(int iphi=0; iphi<nphi-1; iphi++){
-		std::cerr << phiFV_[iphi] << ", ";
-	}
-	std::cerr << phiFV_[nphi-1]<< ")\t";
-	std::cerr << "V = " << model->vpot(phiFV_) << std::endl;
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "true and false vacua have been set." << std::endl;
 
-	std::cerr << "\ttrue vacuum : ";
-	std::cerr << "(";
-	for(int iphi=0; iphi<nphi-1; iphi++){
-		std::cerr << phiTV_[iphi] << ", ";
+		std::cerr << "\tfalse vacuum : ";
+		std::cerr << "(";
+		for(int iphi=0; iphi<nphi-1; iphi++){
+			std::cerr << phiFV_[iphi] << ", ";
+		}
+		std::cerr << phiFV_[nphi-1]<< ")\t";
+		std::cerr << "V = " << model->vpot(phiFV_) << std::endl;
+
+		std::cerr << "\ttrue vacuum : ";
+		std::cerr << "(";
+		for(int iphi=0; iphi<nphi-1; iphi++){
+			std::cerr << phiTV_[iphi] << ", ";
+		}
+		std::cerr << phiTV_[nphi-1]<< ")\t";
+		std::cerr << "V = " << model->vpot(phiTV_) << std::endl;
 	}
-	std::cerr << phiTV_[nphi-1]<< ")\t";
-	std::cerr << "V = " << model->vpot(phiTV_) << std::endl;
+
+	VFV = model->vpot(phiFV_);
 	setVacuumDone = true;
 
 	return 0;
@@ -344,7 +360,6 @@ double bounce::fieldExcursion() const{
 double bounce::derivativeAtBoundary() const{
 	double normsquared = 0.;
 	for(int iphi=0; iphi<nphi; iphi++){
-		//normsquared += pow(phi[(n-1)*nphi+iphi] - phi[(n-2)*nphi+iphi], 2);
 		normsquared += pow(phiFV[iphi] - phi[(n-1)*nphi+iphi], 2);
 	}
 	return sqrt(normsquared)/dr;
@@ -354,9 +369,13 @@ double bounce::derivativeAtBoundary() const{
 double bounce::evolveUntil(const double tend){
 	double t = 0.;
 	double dt = 2./(1. + dim + sqrt(1.+dim)) * pow(r(1),2) * safetyfactor;
-	std::cerr << std::endl;
-	std::cerr << "evolve until t = " << tend << ", (dt = " << dt << ")" << std::endl;
-	std::cerr << std::endl;
+
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "evolve until t = " << tend << ", (dt = " << dt << ")" << std::endl;
+		std::cerr << std::endl;
+	}
+
 	while(t<tend){
 		evolve(dt);
 		t += dt;
@@ -380,133 +399,102 @@ int bounce::solve(){
 	}
 
 	// make the bubble wall thin to get negative potential energy 
-	std::cerr << "========================================" << std::endl;
-	std::cerr << std::endl;
-	std::cerr << "probing a thickness to get negative V[phi] ..." << std::endl;
-	std::cerr << std::endl;
+	if(verbose){
+		std::cerr << "========================================" << std::endl;
+		std::cerr << std::endl;
+		std::cerr << "probing a thickness to get negative V[phi] ..." << std::endl;
+		std::cerr << std::endl;
+	}
 
 	double xTV = xTV0;
 	double width = width0;
 	while(true){
 		setInitial(xTV, width);
-		std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
-		std::cerr << "\t" << "xWidth:\t" << width << std::endl;
-		std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
-		std::cerr << "\t" << "n :\t" << n << std::endl;
-		std::cerr << "\t" << std::endl;
+		if(verbose){
+			std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
+			std::cerr << "\t" << "xWidth:\t" << width << std::endl;
+			std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
+			std::cerr << "\t" << "n :\t" << n << std::endl;
+			std::cerr << "\t" << std::endl;
+		}
 
 		if(v() < 0.) {
 			break;
 		}
 		width = width * 0.5;
 		if(width*n < 1.) {
-			std::cerr << std::endl;
-			std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
-			std::cerr << std::endl;
-			changeN(2*n);
+			if(verbose){
+				std::cerr << std::endl;
+				std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
+				std::cerr << std::endl;
+			}
+			setN(2*n);
 		}
 	}
 
 	// make the size of the bubble smaller enough than the size of the sphere
-	std::cerr << std::endl;
-	std::cerr << "probing the size of the bounce configuration ..." << std::endl;
-	std::cerr << std::endl;
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "probing the size of the bounce configuration ..." << std::endl;
+		std::cerr << std::endl;
+	}
 	while(true){
 
 		double deriv = evolveUntil(tend0);
-		std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
-		std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
-		std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
-		std::cerr << "\t" << std::endl;
+		if(verbose){
+			std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
+			std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
+			std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
+			std::cerr << "\t" << std::endl;
+		}
 
 		if( deriv  < derivMax) {
 			break;
 		} else {
 
-			std::cerr << std::endl;
-			std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
-			std::cerr << std::endl;
+			if(verbose){
+				std::cerr << std::endl;
+				std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
+				std::cerr << std::endl;
+			}
 			xTV = xTV * 0.5;
 			width = width * 0.5;
 			if(width*n < 1.) {
-				std::cerr << std::endl;
-				std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
-				std::cerr << std::endl;
-				changeN(2*n);
+				if(verbose){
+					std::cerr << std::endl;
+					std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
+					std::cerr << std::endl;
+				}
+				setN(2*n);
 			}
 
 			setInitial(xTV, width);
-			std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
-			std::cerr << "\t" << "xWidth:\t" << width << std::endl;
-			std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
-			std::cerr << "\t" << "n :\t" << n << std::endl;
+			if(verbose){
+				std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
+				std::cerr << "\t" << "xWidth:\t" << width << std::endl;
+				std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
+				std::cerr << "\t" << "n :\t" << n << std::endl;
+			}
 		}
 	}
 
-	std::cerr << std::endl;
-	std::cerr << "minimizing the kinetic energy ..." << std::endl;
-	std::cerr << std::endl;
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "minimizing the kinetic energy ..." << std::endl;
+		std::cerr << std::endl;
+	}
 
 	evolveUntil(tend1);
 
-	std::cerr << std::endl;
-	std::cerr << "done." << std::endl;
-	std::cerr << std::endl;
+	if(verbose){
+		std::cerr << std::endl;
+		std::cerr << "done." << std::endl;
+		std::cerr << std::endl;
+	}
 
 	return 0;
 }
 
-int bounce::refine(const double dt){
-	if(!setModelDone){
-		std::cerr << std::endl;
-		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
-		std::cerr << std::endl;
-		return -1;
-	}
-	if(!setVacuumDone){
-		std::cerr << std::endl;
-		std::cerr << "!!! correct vacua have not been set yet !!!"<< std::endl;
-		std::cerr << std::endl;
-		return -1;
-	}
-
-	int nold = n;
-	double *dummy;
-	dummy = new double[n*nphi];
-	for(int i=0; i<n*nphi; i++){
-		dummy[i] = phi[i];
-	}
-	changeN(2*n);
-	for(int i=0; i<nold; i++){
-		for(int iphi=0; iphi<nphi; iphi++){
-			phi[(2*i)*nphi + iphi] = dummy[i*nphi + iphi];
-		}
-	}
-
-
-	for(int iphi=0; iphi<nphi; iphi++){
-		phi[1*nphi + iphi] = (3.*dummy[0*nphi + iphi] + dummy[1*nphi + iphi])/4.;
-	}
-	for(int i=1; i<nold-2; i++){
-		for(int iphi=0; iphi<nphi; iphi++){
-			phi[(2*i+1)*nphi + iphi] = (
-								-1.*dummy[(i-1)*nphi + iphi]
-								+ 9.*dummy[ i   *nphi + iphi]
-								+ 9.*dummy[(i+1)*nphi + iphi]
-								- 1.*dummy[(i+2)*nphi + iphi]
-								)/16.;
-		}
-	}
-	for(int iphi=0; iphi<nphi; iphi++){
-		phi[(2*nold-3)*nphi + iphi] = (dummy[(nold-2)*nphi + iphi] + dummy[(nold-1)*nphi + iphi])/2.;
-	}
-	for(int iphi=0; iphi<nphi; iphi++){
-		phi[(2*nold-1)*nphi + iphi] = (dummy[(nold-1)*nphi + iphi] + phiFV[iphi])/2.;
-	}
-
-	evolveUntil(dt);
-	return 0;
-}
 
 
 double bounce::getlambda() const{
@@ -551,5 +539,4 @@ int bounce::printBounce() const{
 
 	return 0;
 }
-
 

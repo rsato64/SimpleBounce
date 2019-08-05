@@ -33,9 +33,13 @@ class genericModel{
 
 class bounce : public scalarfield {
   public:
-	bounce(const int n_, const int rmax_, const int dim_);
+	bool verbose;
+
+	bounce();
 	~bounce();
-	void changeN(const int n_);
+	void setRmax(const double rmax_);
+	void setDimension(const int dim_);
+	void setN(const int n_);
 	void setModel(genericModel* const);
 	double t() const;
 	double v() const;
@@ -43,7 +47,6 @@ class bounce : public scalarfield {
 	double residual(const int i, const int iphi) const;
 	double residualBounce(const int i, const int iphi) const;
 	double action() const;
-	double actionError() const;
 	double rBounce(const int i) const;
 	int setVacuum(const double *phiTV_, const double *phiFV_);
 	void setInitial(const double frac, const double width);
@@ -51,7 +54,6 @@ class bounce : public scalarfield {
 	double derivativeAtBoundary() const;
 	double evolveUntil(const double tend);
 	int solve();
-	int refine(const double dt);
 	double getlambda() const;
 	int printBounce() const;
 
@@ -64,6 +66,7 @@ class bounce : public scalarfield {
 	double* r_dminusoneth;
 	bool setModelDone;
 	bool setVacuumDone;
+	double VFV;
 
 	// parameters for numerical calculation
 	double safetyfactor;

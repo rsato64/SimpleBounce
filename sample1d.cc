@@ -25,11 +25,11 @@ class model1 : public genericModel{
 
 int main() {
 
-	int n = 100; // number of grid
-	int dim = 3; // number of space dimension 
-	double rmax = 1.; // phi(rmax) = phi(False vacuum)
-
-	bounce c(n, rmax, dim);
+	bounce c;
+	c.verbose = true;
+	c.setRmax(1.); // phi(rmax) = phi(False vacuum)
+	c.setDimension(3); // number of space dimension
+	c.setN(100); // number of grid
 	model1 Model;
 	c.setModel(&Model);
 
@@ -46,7 +46,6 @@ int main() {
 
 	// Euclidean action
 	cerr << "S_E = " << c.action() << endl;
-	cerr << "error of S_E = " << c.actionError() << endl;
 
 	return 0;
 }
