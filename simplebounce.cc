@@ -2,26 +2,12 @@
 #include<cmath>
 #include"simplebounce.h"
 
+// integral by trapezoidal rule
 double integral(const double *integrand, const double dr, const int n){
 	double result = 0.;
-
-#ifndef SIMPSON
-	// integral by trapezoidal rule
 	for(int i=0; i<n-1; i++){
 		result += (integrand[i] + integrand[i+1])*dr/2.;
 	}
-#endif
-
-#ifdef SIMPSON
-	// integral by Simpson's rule
-	for(int i=0; 2*i+2<n; i++){
-		result += (integrand[2*i] + 4.*integrand[2*i+1] + integrand[2*i+2])*dr/3.;
-	}
-	for(int i=n-1-((n-1)%2); i<n-1; i++){
-		result += (integrand[i] + integrand[i+1])*dr/2.;
-	}
-#endif
-	
 	return result;
 }
 
@@ -50,8 +36,6 @@ void scalarfield::set(const int i, const int iphi, const double phi_){
 // \nabla^2 \phi = d^2 phi / dr^2 + (d-1)/r * dphi/dr
 double scalarfield::lap(const int i, const int iphi) const {
 
-#ifndef LAPLACIAN2
-	// the most naive laplacian
 	if(i==0){
 		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])/dr/dr* dim;
 	} else if (i==n-1){
@@ -61,35 +45,6 @@ double scalarfield::lap(const int i, const int iphi) const {
 		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
 				+ (phi[(i+1)*nphi + iphi] - phi[(i-1)*nphi + iphi])/2./dr * (dim-1.)/r(i);
 	}
-#endif
-
-#ifdef LAPLACIAN2
-	// dphi/dr is refined
-	if(i==0){
-		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])/dr/dr* dim;
-	} else if(i==1){
-		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
-				+ ( -1.*phi[(i+2)*nphi + iphi]
-					+6.*phi[(i+1)*nphi + iphi]
-					-3.*phi[ i   *nphi + iphi]
-					-2.*phi[(i-1)*nphi + iphi] )/6./dr * (dim-1.)/r(i);
-	} else if (i==n-1){
-		return (                       - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
-				+ (                       - phi[(i-1)*nphi + iphi])/2./dr * (dim-1.)/r(i);
-	} else if (i==n-2){
-		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
-				+ ( 2.*phi[(i+1)*nphi + iphi]
-					+3.*phi[ i   *nphi + iphi]
-					-6.*phi[(i-1)*nphi + iphi]
-					+1.*phi[(i-2)*nphi + iphi] )/6./dr * (dim-1.)/r(i);
-	} else {
-		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
-				+ ( -1.*phi[(i+2)*nphi + iphi]
-					+8.*phi[(i+1)*nphi + iphi]
-					-8.*phi[(i-1)*nphi + iphi]
-					+   phi[(i-2)*nphi + iphi] )/12./dr * (dim-1.)/r(i);
-	}
-#endif
 }
 
 
@@ -117,8 +72,9 @@ bounce::bounce() : scalarfield(1, 100, 1., 4) {
 	xTV0 = 0.5;
 	width0 = 0.05;
 	derivMax = 1e-2;
-	tend0 = 0.1;
-	tend1 = 0.5;
+	tend0 = 0.05;
+	tend1 = 0.4;
+	maxN = 1000;
 }
 
 bounce::~bounce(){
@@ -137,7 +93,7 @@ void bounce::setRmax(const double rmax_){
 	if(verbose){
 		std::cerr << std::endl;
 		std::cerr << "maximum of radius is set."<< std::endl;
-		std::cerr << "\trmax : " << dim << std::endl;
+		std::cerr << "\trmax : " << rmax << std::endl;
 		std::cerr << std::endl;
 	}
 }
@@ -325,7 +281,7 @@ int bounce::setVacuum(const double *phiTV_, const double *phiFV_){
 		std::cerr << phiFV_[nphi-1]<< ")\t";
 		std::cerr << "V = " << model->vpot(phiFV_) << std::endl;
 
-		std::cerr << "\ttrue vacuum : ";
+		std::cerr << "\ta point with smaller V : ";
 		std::cerr << "(";
 		for(int iphi=0; iphi<nphi-1; iphi++){
 			std::cerr << phiTV_[iphi] << ", ";
@@ -439,6 +395,11 @@ int bounce::solve(){
 			}
 			setN(2*n);
 		}
+
+		if(n>maxN){
+			std::cerr << "!!! n became too large !!!" << std::endl;
+			return -1;
+		}
 	}
 
 	// make the size of the bubble smaller enough than the size of the sphere
@@ -488,6 +449,11 @@ int bounce::solve(){
 				std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
 				std::cerr << "\t" << "n :\t" << n << std::endl;
 			}
+		}
+
+		if(n>maxN){
+			std::cerr << "!!! n became too large !!!" << std::endl;
+			return -1;
 		}
 	}
 

@@ -76,5 +76,6 @@ class bounce : public scalarfield {
 	double derivMax;
 	double tend0;
 	double tend1;
+	int maxN;
 };
 

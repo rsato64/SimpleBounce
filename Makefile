@@ -1,4 +1,3 @@
-#OPT=-O3 -Wall -DSIMPSON -DLAPLACIAN2
 OPT=-O3 -Wall
 
 all: sample1.x sample1b.x sample1c.x sample1d.x sample2a.x sample2b.x sample2c.x sample3.x sample4.x sample5.x sample6.x sample7.x sample8.x
