@@ -369,8 +369,12 @@ double bounce::derivativeAtBoundary() const{
 
 // evolve the configuration
 double bounce::evolveUntil(const double tend){
+
+	// 1 + d + sqrt(1 + d) is maximum of absolute value of eigenvalue of {{-2d, 2d},{ (1-d)/2 + 1, -2}},
+	// which is discreitzed Laplacian for n = 2. This value is 6 for d=3, and 7.23607 for d=4.
+	// The numerical value of maximum of absolute value of eigenvalue of discretized Laplacian for large n is 6 for d=3, and 7.21417 for d=4
 	double t = 0.;
-	double dt = 2./(1. + dim + sqrt(1.+dim)) * pow(r(1),2) * safetyfactor;
+	double dt = 2./(1. + dim + sqrt(1.+dim)) * pow(dr,2) * safetyfactor;
 
 	if(verbose){
 		std::cerr << std::endl;
