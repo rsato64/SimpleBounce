@@ -5,7 +5,8 @@ class scalarfield{
   protected:
 	double* phi;
 	int n, nphi, dim;
-	double rmax, dr;
+	double rmax, dr, drinv;
+	double* rinv;
   public:
 	scalarfield(const int nphi_, const int n_, const int rmax_, const int dim_);
 	~scalarfield();
@@ -13,6 +14,7 @@ class scalarfield{
 	double val(const int i, const int iphi) const;
 	void set(const int i, const int iphi, const double phi_);
 	double lap(const int i, const int iphi) const;
+	void rinvCalc();
 };
 
 class genericModel{
