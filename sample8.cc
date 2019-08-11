@@ -25,7 +25,7 @@ class model8 : public genericModel{
 		c5 = 0.57023;
 		c6 = 0.138912;
 		c7 = 0.51723;
-		c8 = 0.65889;
+		c8 = 0.658889;
 		nphi = 8;
 		dvdphi = new double[nphi];
 	}

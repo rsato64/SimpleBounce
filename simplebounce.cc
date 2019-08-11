@@ -6,7 +6,7 @@
 double integral(const double *integrand, const double dr, const int n){
 	double result = 0.;
 	for(int i=0; i<n-1; i++){
-		result += (integrand[i] + integrand[i+1])*dr/2.;
+		result += (integrand[i] + integrand[i+1])*dr*0.5;
 	}
 	return result;
 }
@@ -40,7 +40,7 @@ void scalarfield::set(const int i, const int iphi, const double phi_){
 // \nabla^2 \phi = d^2 phi / dr^2 + (d-1)/r * dphi/dr
 double scalarfield::lap(const int i, const int iphi) const {
 	if(i==0){
-		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])/dr/dr* dim;
+		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])*drinv*drinv* dim;
 	} else {
 		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])*drinv*drinv
 				+ (phi[(i+1)*nphi + iphi] - phi[(i-1)*nphi + iphi])*0.5*drinv * (dim-1.)*rinv[i];
