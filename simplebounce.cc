@@ -58,7 +58,6 @@ bounce::bounce() : scalarfield(1, 100, 1., 4) {
 	rmax = 1.;
 	dim = 4;
 	nphi = 1;
-	RHS = new double[n*nphi];
 	phiTV = new double[nphi];
 	phiFV = new double[nphi];
 	r_dminusoneth = new double[n];
@@ -83,7 +82,6 @@ bounce::bounce() : scalarfield(1, 100, 1., 4) {
 }
 
 bounce::~bounce(){
-	delete[] RHS;
 	delete[] phiTV;
 	delete[] phiFV;
 	delete[] r_dminusoneth;
@@ -98,10 +96,8 @@ void bounce::setRmax(const double rmax_){
 		r_dminusoneth[i] = pow(r(i),dim-1);
 	}
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "maximum of radius is set."<< std::endl;
 		std::cerr << "\trmax : " << rmax << std::endl;
-		std::cerr << std::endl;
 	}
 }
 
@@ -111,10 +107,8 @@ void bounce::setDimension(const int dim_){
 		r_dminusoneth[i] = pow(r(i),dim-1);
 	}
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "dimension is set."<< std::endl;
 		std::cerr << "\tdim : " << dim << std::endl;
-		std::cerr << std::endl;
 	}
 }
 
@@ -127,20 +121,16 @@ void bounce::setN(const int n_){
 	rinv = new double[n_];
 	rinvCalc();
 	delete[] phi;
-	delete[] RHS;
 	delete[] r_dminusoneth;
 	phi = new double[n_*nphi];
-	RHS = new double[n_*nphi];
 	r_dminusoneth = new double[n_];
 	for(int i=0; i<n_; i++){
 		r_dminusoneth[i] = pow(r(i),dim-1);
 	}
 
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "number of grids is set."<< std::endl;
 		std::cerr << "\t(n,dr) : (" << n << ", " << dr << ")" << std::endl;
-		std::cerr << std::endl;
 	}
 }
 
@@ -151,14 +141,11 @@ void bounce::setModel(genericModel * const model_){
 	delete[] phi;
 	delete[] phiTV;
 	delete[] phiFV;
-	delete[] RHS;
 	phi = new double[n*nphi];
 	phiTV = new double[nphi];
 	phiFV = new double[nphi];
-	RHS = new double[n*nphi];
 
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "model has been set"<< std::endl;
 		std::cerr << "\tnumber of fields :\t" << nphi << std::endl;
 	}
@@ -191,6 +178,7 @@ double bounce::v() const{
 double bounce::evolve(const double ds){
 
 	double laplacian[n*nphi];
+
 	for(int i=0; i<n-1; i++){
 		for(int iphi=0; iphi<nphi; iphi++){
 			laplacian[i*nphi + iphi] = lap(i,iphi);
@@ -217,6 +205,7 @@ double bounce::evolve(const double ds){
 	// Eq. 9 of 1907.02417
 	lambda = integral(integrand1,dr,n) / integral(integrand2,dr,n);
 
+	double RHS[n*nphi];
 	// RHS of Eq. 8 of 1907.02417
 	// phi at boundary is fixed to phiFV and will not be updated.
 	for(int i=0; i<n-1; i++){
@@ -275,9 +264,7 @@ double bounce::rBounce(const int i) const{
 // set the posiiton of true and false vacua
 int bounce::setVacuum(const double *phiTV_, const double *phiFV_){
 	if(!setModelDone){
-		std::cerr << std::endl;
 		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
-		std::cerr << std::endl;
 		return -1;
 	}
 
@@ -293,7 +280,6 @@ int bounce::setVacuum(const double *phiTV_, const double *phiFV_){
 	}
 
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "true and false vacua have been set." << std::endl;
 
 		std::cerr << "\tfalse vacuum : ";
@@ -360,9 +346,7 @@ double bounce::evolveUntil(const double tend){
 	double dt = 2./(1. + dim + sqrt(1.+dim)) * pow(dr,2) * safetyfactor;
 
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "evolve until t = " << tend << ", (dt = " << dt << ")" << std::endl;
-		std::cerr << std::endl;
 	}
 
 	while(t<tend){
@@ -375,25 +359,18 @@ double bounce::evolveUntil(const double tend){
 // main routine to get the bounce solution
 int bounce::solve(){
 	if(!setModelDone){
-		std::cerr << std::endl;
 		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
-		std::cerr << std::endl;
 		return -1;
 	}
 	if(!setVacuumDone){
-		std::cerr << std::endl;
 		std::cerr << "!!! correct vacua have not been set yet !!!"<< std::endl;
-		std::cerr << std::endl;
 		return -1;
 	}
 
 
 	// make the bubble wall thin to get negative potential energy 
 	if(verbose){
-		std::cerr << "========================================" << std::endl;
-		std::cerr << std::endl;
 		std::cerr << "probing a thickness to get negative V[phi] ..." << std::endl;
-		std::cerr << std::endl;
 	}
 	double xTV = xTV0;
 	double width = width0;
@@ -404,7 +381,6 @@ int bounce::solve(){
 			std::cerr << "\t" << "xWidth:\t" << width << std::endl;
 			std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
 			std::cerr << "\t" << "n :\t" << n << std::endl;
-			std::cerr << "\t" << std::endl;
 		}
 
 		// OK if V is negative
@@ -416,9 +392,7 @@ int bounce::solve(){
 		width = width * 0.5;
 		if(width*n < 1.) {
 			if(verbose){
-				std::cerr << std::endl;
 				std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
-				std::cerr << std::endl;
 			}
 			setN(2*n);
 		}
@@ -431,9 +405,7 @@ int bounce::solve(){
 
 	// make the size of the bubble smaller enough than the size of the sphere
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "probing the size of the bounce configuration ..." << std::endl;
-		std::cerr << std::endl;
 	}
 	while(true){
 
@@ -442,7 +414,6 @@ int bounce::solve(){
 			std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
 			std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
 			std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
-			std::cerr << "\t" << std::endl;
 		}
 
 		// dphi/dr at the boundary is small enough
@@ -453,17 +424,13 @@ int bounce::solve(){
 
 			// take smaller bounce configuration
 			if(verbose){
-				std::cerr << std::endl;
 				std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
-				std::cerr << std::endl;
 			}
 			xTV = xTV * 0.5;
 			width = width * 0.5;
 			if(width*n < 1.) {
 				if(verbose){
-					std::cerr << std::endl;
 					std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
-					std::cerr << std::endl;
 				}
 				setN(2*n);
 			}
@@ -485,17 +452,13 @@ int bounce::solve(){
 	}
 
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "minimizing the kinetic energy ..." << std::endl;
-		std::cerr << std::endl;
 	}
 
 	evolveUntil(tend1);
 
 	if(verbose){
-		std::cerr << std::endl;
 		std::cerr << "done." << std::endl;
-		std::cerr << std::endl;
 	}
 
 	return 0;
@@ -510,15 +473,11 @@ double bounce::getlambda() const{
 // print the result
 int bounce::printBounce() const{
 	if(!setModelDone){
-		std::cerr << std::endl;
 		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
-		std::cerr << std::endl;
 		return -1;
 	}
 	if(!setVacuumDone){
-		std::cerr << std::endl;
 		std::cerr << "!!! correct vacua have not been set yet !!!"<< std::endl;
-		std::cerr << std::endl;
 		return -1;
 	}
 

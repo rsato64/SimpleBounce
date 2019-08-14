@@ -60,7 +60,6 @@ class bounce : public scalarfield {
 	int printBounce() const;
 
   private:
-	double* RHS;
 	double lambda;
 	double* phiTV;
 	double* phiFV;
