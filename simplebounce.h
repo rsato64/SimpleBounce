@@ -59,6 +59,16 @@ class bounce : public scalarfield {
 	double getlambda() const;
 	int printBounce() const;
 
+	void setSafetyfactor(double x);
+	void setMaximumvariation(double x);
+	void setXTV0(double x);
+	void setWidth0(double x);
+	void setDerivMax(double x);
+	void setTend0(double x);
+	void setTend1(double x);
+	void setMaxN(int x);
+
+
   private:
 	double lambda;
 	double* phiTV;

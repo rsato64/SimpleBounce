@@ -509,3 +509,27 @@ int bounce::printBounce() const{
 	return 0;
 }
 
+void bounce::setSafetyfactor(double x){
+	safetyfactor = x;
+}
+void bounce::setMaximumvariation(double x){
+	maximumvariation = x;
+}
+void bounce::setXTV0(double x){
+	xTV0 = x;
+}
+void bounce::setWidth0(double x){
+	width0 = x;
+}
+void bounce::setDerivMax(double x){
+	derivMax = x;
+}
+void bounce::setTend0(double x){
+	tend0 = x;
+}
+void bounce::setTend1(double x){
+	tend1 = x;
+}
+void bounce::setMaxN(int x){
+	maxN = x;
+}
