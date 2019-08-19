@@ -1,8 +1,9 @@
-// Eq 41 of 1906.10829
+// Eq 40 of 1906.10829
 
 #include<iostream>
 #include<cmath>
 #include"simplebounce.h"
+#include<sys/time.h>
 using namespace std;
 
 class model1 : public genericModel{
@@ -10,7 +11,7 @@ class model1 : public genericModel{
 	double c;
 	model1(){
 		nphi = 1;
-		c = 0.2;
+		c = 0.47;
 		dvdphi = new double[nphi];
 	}
 	~model1(){
@@ -28,7 +29,7 @@ class model1 : public genericModel{
 int main() {
 
 	bounce c;
-	c.verbose = true;
+	c.verbose = false;
 	c.setRmax(1.); // phi(rmax) = phi(False vacuum)
 	c.setDimension(3); // number of space dimension
 	c.setN(100); // number of grid
@@ -41,13 +42,16 @@ int main() {
 
 
 	// calcualte the bounce solution
+	struct timeval time1;
+	struct timeval time2;
+	gettimeofday(&time1, NULL);
 	c.solve();
-
-	// show the results
-	c.printBounce();
+	gettimeofday(&time2, NULL);
 
 	// Euclidean action
-	cout << "S_E = " << c.action() << endl;
+	cout << c.action() << "\t";
+	cout << time2.tv_sec - time1.tv_sec +  (float)(time2.tv_usec - time1.tv_usec) / 1000000 << "\t";
+	cout << endl;
 
 	return 0;
 }

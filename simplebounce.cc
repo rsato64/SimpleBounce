@@ -38,6 +38,7 @@ void scalarfield::set(const int i, const int iphi, const double phi_){
 }
 
 // \nabla^2 \phi = d^2 phi / dr^2 + (d-1)/r * dphi/dr
+#ifndef LAPLACIAN2
 double scalarfield::lap(const int i, const int iphi) const {
 	if(i==0){
 		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])*drinv*drinv* dim;
@@ -46,6 +47,38 @@ double scalarfield::lap(const int i, const int iphi) const {
 				+ (phi[(i+1)*nphi + iphi] - phi[(i-1)*nphi + iphi])*0.5*drinv * (dim-1.)*rinv[i];
 	}
 }
+#endif
+
+#ifdef LAPLACIAN2
+double scalarfield::lap(const int i, const int iphi) const {
+	if(i==0){
+		return 2.*(phi[1*nphi + iphi]-phi[0*nphi + iphi])*drinv*drinv* dim;
+	} else if(i==1){
+		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])*drinv*drinv
+				+ ( -1.*phi[(i+2)*nphi + iphi]
+					+6.*phi[(i+1)*nphi + iphi]
+					-3.*phi[ i   *nphi + iphi]
+					-2.*phi[(i-1)*nphi + iphi] )*0.166666666666666*drinv * (dim-1.)*rinv[i];
+	/*} else if (i==n-1){
+		return (                       - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])*drinv*drinv
+				+ (                       - phi[(i-1)*nphi + iphi])/2./dr * (dim-1.)*rinv[i];*/
+	} else if (i==n-2){
+		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])*drinv*drinv
+				+ ( 2.*phi[(i+1)*nphi + iphi]
+					+3.*phi[ i   *nphi + iphi]
+					-6.*phi[(i-1)*nphi + iphi]
+					+1.*phi[(i-2)*nphi + iphi] )*0.166666666666666*drinv * (dim-1.)*rinv[i];
+	} else {
+		return (phi[(i+1)*nphi + iphi] - 2.*phi[i*nphi + iphi] + phi[(i-1)*nphi + iphi])/dr/dr
+				+ ( -1.*phi[(i+2)*nphi + iphi]
+					+8.*phi[(i+1)*nphi + iphi]
+					-8.*phi[(i-1)*nphi + iphi]
+					+   phi[(i-2)*nphi + iphi] )*0.0833333333333333*drinv * (dim-1.)*rinv[i];
+	}
+}
+#endif
+
+
 
 void scalarfield::rinvCalc(){
 	for(int i=1; i<n; i++){

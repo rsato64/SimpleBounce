@@ -312,7 +312,7 @@ actionlist190610829 = []
 
 for V, dV, TV, FV in zip(Vlist, dVlist, TVlist, FVlist):
     tbefore=datetime.datetime.today()
-    Y = pd.fullTunneling([TV,FV], V, dV, tunneling_init_params={'alpha':2}, deformation_deform_params={'fRatioConv':0.001, 'verbose':0}, verbose=False)
+    Y = pd.fullTunneling([TV,FV], V, dV, tunneling_init_params={'alpha':2}, deformation_deform_params={'fRatioConv':0.02, 'verbose':0}, verbose=False)
     tafter=datetime.datetime.today()
     timelist190610829.append(tafter - tbefore)
     actionlist190610829.append(Y.action)
@@ -337,14 +337,15 @@ for V, dV, TV, FV in zip(Vlist, dVlist, TVlist, FVlist):
 
 ################################################################################
 
-print('# Eq. 40, 41, 42, 43 in 1906.10829')
-print('# model runtime action')
-for time, action in zip(timelist190610829, actionlist190610829):
-    print(time, ' ', action)
-print('')
+print('# results of cosmoTransitions')
 print('# Table 1 in 1901.03714')
 print('# model runtime action')
 for time, action in zip(timelist190103714, actionlist190103714):
-    print(time, ' ', action)
+    print(action, ' ', time)
+print('')
+print('# Eq. 40, 41, 42, 43 in 1906.10829')
+print('# model runtime action')
+for time, action in zip(timelist190610829, actionlist190610829):
+    print(action, ' ', time)
 
 

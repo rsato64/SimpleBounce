@@ -3,6 +3,7 @@
 #include<iostream>
 #include<cmath>
 #include"simplebounce.h"
+#include<sys/time.h>
 using namespace std;
 
 class model4 : public genericModel{
@@ -70,7 +71,7 @@ class model4 : public genericModel{
 int main() {
 
 	bounce c;
-	c.verbose = true;
+	c.verbose = false;
 	c.setRmax(1.); // phi(rmax) = phi(False vacuum)
 	c.setDimension(3); // number of space dimension
 	c.setN(100); // number of grid
@@ -82,13 +83,16 @@ int main() {
 	c.setVacuum(phiTV, phiFV);
 
 	// calcualte the bounce solution
+	struct timeval time1;
+	struct timeval time2;
+	gettimeofday(&time1, NULL);
 	c.solve();
-
-	// show the results
-	c.printBounce();
+	gettimeofday(&time2, NULL);
 
 	// Euclidean action
-	cout << "S_E = " << c.action() << endl;
+	cout << c.action() << "\t";
+	cout << time2.tv_sec - time1.tv_sec +  (float)(time2.tv_usec - time1.tv_usec) / 1000000 << "\t";
+	cout << endl;
 
 	return 0;
 }
