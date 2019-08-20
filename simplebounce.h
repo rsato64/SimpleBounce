@@ -2,19 +2,34 @@
 double integral(const double* integrand, const double dr, const int n);
 
 class scalarfield{
-  protected:
-	double* phi;
-	int n, nphi, dim;
-	double rmax, dr, drinv;
-	double* rinv;
+  private:
+	double* phi_;
+	int n_, nphi_, dim_;
+	double rmax_, dr_, drinv_;
+	double* rinv_;
+	double* r_dminusoneth_;
   public:
 	scalarfield(const int nphi_, const int n_, const int rmax_, const int dim_);
 	~scalarfield();
+	double phi(const int i, const int iphi) const;
+	void setPhi(const int i, const int iphi, const double phi_);
+	void addToPhi(const int i, const int iphi, const double phi_);
+	double* phivec(const int i) const;
 	double r(const int i) const;
-	double val(const int i, const int iphi) const;
-	void set(const int i, const int iphi, const double phi_);
 	double lap(const int i, const int iphi) const;
-	void rinvCalc();
+	void updateInfo();
+
+	void setRmax(const double rmax_);
+	void setDimension(const int dim_);
+	void setN(const int n_);
+	void setNphi(const int nphi_);
+
+	int n() const;
+	int nphi() const;
+	int dim() const;
+	double rmax() const;
+	double dr() const;
+	double r_dminusoneth(const int i) const;
 };
 
 class genericModel{
@@ -35,13 +50,8 @@ class genericModel{
 
 class bounce : public scalarfield {
   public:
-	bool verbose;
-
 	bounce();
 	~bounce();
-	void setRmax(const double rmax_);
-	void setDimension(const int dim_);
-	void setN(const int n_);
 	void setModel(genericModel* const);
 	double t() const;
 	double v() const;
@@ -67,6 +77,8 @@ class bounce : public scalarfield {
 	void setTend0(double x);
 	void setTend1(double x);
 	void setMaxN(int x);
+	void verboseOn();
+	void verboseOff();
 
 
   private:
@@ -74,10 +86,10 @@ class bounce : public scalarfield {
 	double* phiTV;
 	double* phiFV;
 	genericModel* model;
-	double* r_dminusoneth;
 	bool setModelDone;
 	bool setVacuumDone;
 	double VFV;
+	bool verbose;
 
 	// parameters for numerical calculation
 	double safetyfactor;

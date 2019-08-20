@@ -56,5 +56,5 @@ for x,y,t in zip(x800,y800,t800):
 plt.tick_params(labelsize=14)
 plt.yticks([45.96, 45.97, 45.98, 45.99, 46., 46.01, 46.02],  [45.96, 45.97, 45.98, 45.99, 46., 46.01, 46.02])
 plt.legend(loc='lower right')
-plt.savefig('accuracy.pdf')
+plt.savefig('change_n_tau.pdf')
 

@@ -1,32 +1,30 @@
-// Eq 16 and Fig 2 of 1907.02417
-
 #include<iostream>
-//#include<cmath>
 #include"simplebounce.h"
 using namespace std;
 
 class model1 : public genericModel{
   public:
 	model1(){
-		nphi = 1;
+		nphi = 1; // number of scalar field(s)
 		dvdphi = new double[nphi];
 	}
 	~model1(){
 		delete[] dvdphi;
 	}
+	// potential for scalar field(s)
 	double vpot (const double* phi) const{
 		return phi[0]*phi[0]/2. - phi[0]*phi[0]*phi[0]/3.;
 	}
+	// first derivative(s) of potential
 	void calcDvdphi(const double *phi) const{
 		dvdphi[0] = phi[0] - phi[0]*phi[0];
 	}
 };
 
-
 int main() {
 
 	bounce c;
-	c.verbose = false;
+	c.verboseOn(); // verbose mode
 	c.setRmax(1.); // phi(rmax) = phi(False vacuum)
 	c.setDimension(4); // number of space dimension
 	c.setN(100); // number of grid
@@ -44,7 +42,7 @@ int main() {
 	// show the results
 	c.printBounce();
 
-
+	// show the Euclidean action
 	cout << "S_E = " << c.action() << endl;
 
 	return 0;

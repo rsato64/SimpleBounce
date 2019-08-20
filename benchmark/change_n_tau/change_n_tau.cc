@@ -109,7 +109,6 @@ int main() {
 		struct timeval time2;
 
 		bounce c;
-		c.verbose = false;
 		c.setRmax(1.); // phi(rmax) = phi(False vacuum)
 		c.setDimension(3); // number of space dimension
 		c.setN(n); // number of grid
@@ -123,7 +122,6 @@ int main() {
 		c.setVacuum(phiTV, phiFV);
 
 		// calcualte the bounce solution
-		//time_t start = time(NULL);
 		gettimeofday(&time1, NULL);
 		c.solve();
 		gettimeofday(&time2, NULL);

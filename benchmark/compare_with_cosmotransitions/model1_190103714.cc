@@ -27,7 +27,6 @@ class model1 : public genericModel{
 int main() {
 
 	bounce c;
-	c.verbose = false;
 	c.setRmax(1.); // phi(rmax) = phi(False vacuum)
 	c.setDimension(3); // number of space dimension
 	c.setN(100); // number of grid
