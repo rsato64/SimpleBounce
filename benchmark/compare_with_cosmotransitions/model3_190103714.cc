@@ -15,15 +15,11 @@ class MyModel : public GenericModel{
 	double c2;
 	double c3;
 	MyModel(){
+		setNphi(3);
 		c0 = 0.684373;
 		c1 = 0.181928;
 		c2 = 0.295089;
 		c3 = 0.284821;
-		nphi = 3;
-		dvdphi = new double[nphi];
-	}
-	~MyModel(){
-		delete[] dvdphi;
 	}
 
 	// potential of scalar field(s)

@@ -15,16 +15,12 @@ class MyModel : public GenericModel{
 	double c3;
 	double c4;
 	MyModel(){
+		setNphi(4);
 		c0 = 0.534808;
 		c1 = 0.77023;
 		c2 = 0.838912;
 		c3 = 0.00517238;
 		c4 = 0.258889;
-		nphi = 4;
-		dvdphi = new double[nphi];
-	}
-	~MyModel(){
-		delete[] dvdphi;
 	}
 	// potential of scalar field(s)
 	double vpot(const double* phi) const {

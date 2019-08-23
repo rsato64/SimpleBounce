@@ -10,11 +10,7 @@ using namespace simplebounce;
 class MyModel : public GenericModel{
   public:
 	MyModel(){
-		nphi = 1;
-		dvdphi = new double[nphi];
-	}
-	~MyModel(){
-		delete[] dvdphi;
+		setNphi(1);
 	}
 	double vpot (const double* phi) const{
 		return (phi[0]*phi[0]*phi[0]*phi[0] - 8.*phi[0]*phi[0]*phi[0] + 10.*phi[0]*phi[0])/10.;

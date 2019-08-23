@@ -19,6 +19,7 @@ class MyModel : public GenericModel{
 	double c6;
 	double c7;
 	MyModel(){
+		setNphi(7);
 		c0 = 0.5233;
 		c1 = 0.34234;
 		c2 = 0.4747;
@@ -27,11 +28,6 @@ class MyModel : public GenericModel{
 		c5 = 0.138912;
 		c6 = 0.517238;
 		c7 = 0.65889;
-		nphi = 7;
-		dvdphi = new double[nphi];
-	}
-	~MyModel(){
-		delete[] dvdphi;
 	}
 
 

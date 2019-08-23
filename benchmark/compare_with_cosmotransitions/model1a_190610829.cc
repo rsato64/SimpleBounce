@@ -11,12 +11,8 @@ class MyModel : public GenericModel{
   public:
 	double c;
 	MyModel(){
-		nphi = 1;
+		setNphi(1);
 		c = 0.47;
-		dvdphi = new double[nphi];
-	}
-	~MyModel(){
-		delete[] dvdphi;
 	}
 	double vpot (const double* phi) const{
 		return phi[0]*phi[0]*phi[0]*phi[0]/4. - (c+1.)/3.*phi[0]*phi[0]*phi[0] + c/2.*phi[0]*phi[0];

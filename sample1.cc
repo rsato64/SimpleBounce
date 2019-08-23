@@ -6,11 +6,7 @@ using namespace simplebounce;
 class MyModel : public GenericModel{
   public:
 	MyModel(){
-		nphi = 1; // number of scalar field(s)
-		dvdphi = new double[nphi];
-	}
-	~MyModel(){
-		delete[] dvdphi;
+		setNphi(1);
 	}
 	// potential for scalar field(s)
 	double vpot (const double* phi) const{

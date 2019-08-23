@@ -129,8 +129,20 @@ double Scalarfield::r_dminusoneth(const int i) const{
 }
 
 
+// class GenericModel
+GenericModel::GenericModel(){
+	dvdphi = new double[1];
+}
+GenericModel::~GenericModel(){
+	delete[] dvdphi;
+}
+void GenericModel::setNphi(const int nphi_){
+	nphi = nphi_;
+	delete[] dvdphi;
+	dvdphi = new double[nphi_];
+}
 
-// class bounce
+// class BounceCalculator
 
 BounceCalculator::BounceCalculator() : Scalarfield(1, 100, 1., 4) {
 	phiTV = new double[nphi()];

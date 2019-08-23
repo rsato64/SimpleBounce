@@ -39,8 +39,9 @@ class GenericModel{
   public:
 	int nphi;
 	double* dvdphi;
-	GenericModel(){
-	}
+	GenericModel();
+	~GenericModel();
+	void setNphi(const int nphi_);
 	virtual double vpot(const double* phi) const {
 		std::cerr << "!!! vpot is not overrode !!!" << std::endl;
 		return 0.;
