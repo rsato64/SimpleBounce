@@ -5,21 +5,22 @@
 #include"simplebounce.h"
 #include<sys/time.h>
 using namespace std;
+using namespace simplebounce;
 
 
-class model2 : public genericModel{
+class MyModel : public GenericModel{
   public:
 	double c0;
 	double c1;
 	double c2;
-	model2(){
+	MyModel(){
 		nphi = 2;
 		dvdphi = new double[nphi];
 		c0 = 1.8;
 		c1 = 0.2;
 		c2 = 0.3;
 	}
-	~model2(){
+	~MyModel(){
 		delete[] dvdphi;
 	}
 
@@ -57,26 +58,26 @@ class model2 : public genericModel{
 
 int main() {
 
-	bounce c;
-	c.setRmax(1.); // phi(rmax) = phi(False vacuum)
-	c.setDimension(3); // number of space dimension
-	c.setN(100); // number of grid
-	model2 Model;
-	c.setModel(&Model);
+	BounceCalculator bounce;
+	bounce.setRmax(1.); // phi(rmax) = phi(False vacuum)
+	bounce.setDimension(3); // number of space dimension
+	bounce.setN(100); // number of grid
+	MyModel model;
+	bounce.setModel(&model);
 
 	double phiTV[2] = {1.,1.}; // a point at which V<0
 	double phiFV[2] = {0.,0.}; // false vacuum
-	c.setVacuum(phiTV, phiFV);
+	bounce.setVacuum(phiTV, phiFV);
 
 	// calcualte the bounce solution
 	struct timeval time1;
 	struct timeval time2;
 	gettimeofday(&time1, NULL);
-	c.solve();
+	bounce.solve();
 	gettimeofday(&time2, NULL);
 
 	// Euclidean action
-	cout << c.action() << "\t";
+	cout << bounce.action() << "\t";
 	cout << time2.tv_sec - time1.tv_sec +  (float)(time2.tv_usec - time1.tv_usec) / 1000000 << "\t";
 	cout << endl;
 

@@ -6,8 +6,9 @@
 #include<sys/time.h>
 #include<iomanip>
 using namespace std;
+using namespace simplebounce;
 
-class model8 : public genericModel{
+class MyModel : public GenericModel{
   public:
 	double c0;
 	double c1;
@@ -18,7 +19,7 @@ class model8 : public genericModel{
 	double c6;
 	double c7;
 	double c8;
-	model8(){
+	MyModel(){
 		c0 = 0.2434;
 		c1 = 0.5233;
 		c2 = 0.34234;
@@ -31,7 +32,7 @@ class model8 : public genericModel{
 		nphi = 8;
 		dvdphi = new double[nphi];
 	}
-	~model8(){
+	~MyModel(){
 		delete[] dvdphi;
 	}
 
@@ -108,29 +109,29 @@ int main() {
 		struct timeval time1;
 		struct timeval time2;
 
-		bounce c;
-		c.setRmax(1.); // phi(rmax) = phi(False vacuum)
-		c.setDimension(3); // number of space dimension
-		c.setN(n); // number of grid
-		c.setTend1(tend);
-		c.setDerivMax(derivMax);
-		model8 Model;
-		c.setModel(&Model);
+		BounceCalculator bounce;
+		bounce.setRmax(1.); // phi(rmax) = phi(False vacuum)
+		bounce.setDimension(3); // number of space dimension
+		bounce.setN(n); // number of grid
+		bounce.setTend1(tend);
+		bounce.setDerivMax(derivMax);
+		MyModel model;
+		bounce.setModel(&model);
 
 		double phiTV[8] = {1.,1.,1.,1.,1.,1.,1.,1.}; // a point at which V<0
 		double phiFV[8] = {0.,0.,0.,0.,0.,0.,0.,0.}; // false vacuum
-		c.setVacuum(phiTV, phiFV);
+		bounce.setVacuum(phiTV, phiFV);
 
 		// calcualte the bounce solution
 		gettimeofday(&time1, NULL);
-		c.solve();
+		bounce.solve();
 		gettimeofday(&time2, NULL);
 
 		// Euclidean action
 		cout << n << "\t";
 		cout << tend << "\t";
 		cout << derivMax << "\t";
-		cout << c.action() << "\t";
+		cout << bounce.action() << "\t";
 		cout << time2.tv_sec - time1.tv_sec +  (float)(time2.tv_usec - time1.tv_usec) / 1000000 << "\t";
 		cout << endl;
 

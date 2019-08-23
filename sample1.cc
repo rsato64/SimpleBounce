@@ -1,14 +1,15 @@
 #include<iostream>
 #include"simplebounce.h"
 using namespace std;
+using namespace simplebounce;
 
-class model1 : public genericModel{
+class MyModel : public GenericModel{
   public:
-	model1(){
+	MyModel(){
 		nphi = 1; // number of scalar field(s)
 		dvdphi = new double[nphi];
 	}
-	~model1(){
+	~MyModel(){
 		delete[] dvdphi;
 	}
 	// potential for scalar field(s)
@@ -23,27 +24,27 @@ class model1 : public genericModel{
 
 int main() {
 
-	bounce c;
-	c.verboseOn(); // verbose mode
-	c.setRmax(1.); // phi(rmax) = phi(False vacuum)
-	c.setDimension(4); // number of space dimension
-	c.setN(100); // number of grid
-	model1 Model;
-	c.setModel(&Model);
+	BounceCalculator bounce;
+	bounce.verboseOn(); // verbose mode
+	bounce.setRmax(1.); // phi(rmax) = phi(False vacuum)
+	bounce.setDimension(4); // number of space dimension
+	bounce.setN(100); // number of grid
+	MyModel model;
+	bounce.setModel(&model);
 
 	double phiTV[1] = {10.}; // a point at which V<0
 	double phiFV[1] = {0.}; // false vacuum
-	c.setVacuum(phiTV, phiFV);
+	bounce.setVacuum(phiTV, phiFV);
 
 
 	// calcualte the bounce solution
-	c.solve();
+	bounce.solve();
 
 	// show the results
-	c.printBounce();
+	bounce.printBounce();
 
 	// show the Euclidean action
-	cout << "S_E = " << c.action() << endl;
+	cout << "S_E = " << bounce.action() << endl;
 
 	return 0;
 }

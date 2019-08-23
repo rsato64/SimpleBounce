@@ -2,6 +2,8 @@
 #include<cmath>
 #include"simplebounce.h"
 
+namespace simplebounce{
+
 // integral by trapezoidal rule
 double integral(const double *integrand, const double dr, const int n){
 	double result = 0.;
@@ -13,9 +15,9 @@ double integral(const double *integrand, const double dr, const int n){
 
 
 
-// class scalarfield
+// class Scalarfield
 
-scalarfield::scalarfield(const int nphi__, const int n__, const int rmax__, const int dim__) {
+Scalarfield::Scalarfield(const int nphi__, const int n__, const int rmax__, const int dim__) {
 	n_ = n__;
 	nphi_ = nphi__;
 	rmax_ = rmax__;
@@ -28,33 +30,33 @@ scalarfield::scalarfield(const int nphi__, const int n__, const int rmax__, cons
 	updateInfo();
 }
 
-scalarfield::~scalarfield(){
+Scalarfield::~Scalarfield(){
 	delete[] phi_;
 	delete[] rinv_;
 	delete[] r_dminusoneth_;
 }
 
 // phi_iphi at r_i
-double scalarfield::phi(const int i, const int iphi) const {
+double Scalarfield::phi(const int i, const int iphi) const {
 	return phi_[i*nphi_+iphi];
 }
-void scalarfield::setPhi(const int i, const int iphi, const double phi__) {
+void Scalarfield::setPhi(const int i, const int iphi, const double phi__) {
 	phi_[i*nphi_+iphi] = phi__;
 }
-void scalarfield::addToPhi(const int i, const int iphi, const double phi__) {
+void Scalarfield::addToPhi(const int i, const int iphi, const double phi__) {
 	phi_[i*nphi_+iphi] += phi__;
 }
-double* scalarfield::phivec(const int i) const {
+double* Scalarfield::phivec(const int i) const {
 	return &phi_[i*nphi_+0];
 }
 
 // radius : r_i
-double scalarfield::r(const int i) const {
+double Scalarfield::r(const int i) const {
 	return dr_*i;
 }
 
 // Laplacian in radial coordinate : \nabla^2 \phi = d^2 phi / dr^2 + (d-1)/r * dphi/dr
-double scalarfield::lap(const int i, const int iphi) const {
+double Scalarfield::lap(const int i, const int iphi) const {
 	if(i==0){
 		return 2.*(phi(1,iphi)-phi(0,iphi))*drinv_*drinv_* dim_;
 	} else {
@@ -64,7 +66,7 @@ double scalarfield::lap(const int i, const int iphi) const {
 }
 
 // calculate and save 1/r(i) and pow(r(i), dim-1)
-void scalarfield::updateInfo(){
+void Scalarfield::updateInfo(){
 	for(int i=1; i<n(); i++){
 		rinv_[i] = 1./r(i);
 	}
@@ -74,7 +76,7 @@ void scalarfield::updateInfo(){
 }
 
 // set the radius at the boundary
-void scalarfield::setRmax(const double rmax__){
+void Scalarfield::setRmax(const double rmax__){
 	rmax_ = rmax__;
 	dr_ = rmax_ / (n_-1.);
 	drinv_ = 1./dr_;
@@ -82,13 +84,13 @@ void scalarfield::setRmax(const double rmax__){
 }
 
 // set the dimension of the Euclidean space
-void scalarfield::setDimension(const int dim__){
+void Scalarfield::setDimension(const int dim__){
 	dim_ = dim__;
 	updateInfo();
 }
 
 // set the number of grid. grid spacing dr is consistently changed.
-void scalarfield::setN(const int n__){
+void Scalarfield::setN(const int n__){
 	n_ = n__;
 	dr_ = rmax_ / (n__-1.);
 	drinv_ = 1./dr_;
@@ -101,28 +103,28 @@ void scalarfield::setN(const int n__){
 	updateInfo();
 }
 
-void scalarfield::setNphi(const int nphi__){
+void Scalarfield::setNphi(const int nphi__){
 	nphi_ = nphi__;
 	delete[] phi_;
 	phi_ = new double[n_*nphi_];
 }
 
-int scalarfield::n() const{
+int Scalarfield::n() const{
 	return n_;
 }
-int scalarfield::nphi() const{
+int Scalarfield::nphi() const{
 	return nphi_;
 }
-int scalarfield::dim() const{
+int Scalarfield::dim() const{
 	return dim_;
 }
-double scalarfield::rmax() const{
+double Scalarfield::rmax() const{
 	return rmax_;
 }
-double scalarfield::dr() const{
+double Scalarfield::dr() const{
 	return dr_;
 }
-double scalarfield::r_dminusoneth(const int i) const{
+double Scalarfield::r_dminusoneth(const int i) const{
 	return r_dminusoneth_[i];
 }
 
@@ -130,7 +132,7 @@ double scalarfield::r_dminusoneth(const int i) const{
 
 // class bounce
 
-bounce::bounce() : scalarfield(1, 100, 1., 4) {
+BounceCalculator::BounceCalculator() : Scalarfield(1, 100, 1., 4) {
 	phiTV = new double[nphi()];
 	phiFV = new double[nphi()];
 
@@ -150,13 +152,13 @@ bounce::bounce() : scalarfield(1, 100, 1., 4) {
 	maxN = 1000;
 }
 
-bounce::~bounce(){
+BounceCalculator::~BounceCalculator(){
 	delete[] phiTV;
 	delete[] phiFV;
 }
 
 // set scalar potential and its derivatives to be used for the bounce calculation
-void bounce::setModel(genericModel * const model_){
+void BounceCalculator::setModel(GenericModel * const model_){
 	model = model_;
 	setNphi(model_->nphi);
 	delete[] phiTV;
@@ -173,7 +175,7 @@ void bounce::setModel(genericModel * const model_){
 }
 
 // kinetic energy : \int_0^\infty dr r^{d-1} \sum_i (-1/2) \phi_i \nabla^2\phi_i
-double bounce::t() const {
+double BounceCalculator::t() const {
 	double integrand[n()];
 	for(int i=0; i<n(); i++){
 		integrand[i] = 0.;
@@ -185,7 +187,7 @@ double bounce::t() const {
 }
 
 // potential energy : \int_0^\infty dr r^{d-1} V(\phi)
-double bounce::v() const{
+double BounceCalculator::v() const{
 	double integrand[n()];
 	for(int i=0; i<n(); i++){
 		integrand[i] = r_dminusoneth(i) * (model->vpot(phivec(i)) - VFV);
@@ -194,7 +196,7 @@ double bounce::v() const{
 }
 
 // evolve the configuration by dtau
-double bounce::evolve(const double dtau){
+double BounceCalculator::evolve(const double dtau){
 
 	double laplacian[n()][nphi()];
 
@@ -254,31 +256,31 @@ double bounce::evolve(const double dtau){
 }
 
 // RHS of Eq. 8 of 1907.02417
-double bounce::residual(const int i, const int iphi) const{
+double BounceCalculator::residual(const int i, const int iphi) const{
 	model->calcDvdphi(phivec(i));
 	return lap(i,iphi) - lambda*model->dvdphi[iphi];
 }
 
 // RHS of EOM for the bounce solution
-double bounce::residualBounce(const int i, const int iphi) const{
+double BounceCalculator::residualBounce(const int i, const int iphi) const{
 	model->calcDvdphi(phivec(i));
 	return lap(i,iphi)/lambda - model->dvdphi[iphi];
 }
 
 // Euclidean action in d-dimensional space 
-double bounce::action() const{
+double BounceCalculator::action() const{
 	double area = dim() * pow(M_PI,dim()/2.) / tgamma(dim()/2.+1.);
 	double rescaled_t_plus_v = pow(lambda, dim()/2.-1.)*t() + pow(lambda, dim()/2.)*v();
 	return area * rescaled_t_plus_v;
 }
 
 // boucne solution from scale transformation
-double bounce::rBounce(const int i) const{
+double BounceCalculator::rBounce(const int i) const{
 	return sqrt(lambda)*dr()*i;
 }
 
 // set the posiiton of true and false vacua
-int bounce::setVacuum(const double *phiTV_, const double *phiFV_){
+int BounceCalculator::setVacuum(const double *phiTV_, const double *phiFV_){
 	if(!setModelDone){
 		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
 		return -1;
@@ -322,7 +324,7 @@ int bounce::setVacuum(const double *phiTV_, const double *phiFV_){
 };
 
 // set the initial configuration
-void bounce::setInitial(const double frac, const double width){
+void BounceCalculator::setInitial(const double frac, const double width){
 	for(int i=0; i<n()-1; i++){
 		for(int iphi=0; iphi<nphi(); iphi++){
 			setPhi(i, iphi, phiTV[iphi] + (phiFV[iphi]-phiTV[iphi])*(1.+tanh( (i-n()*frac)/(n()*width) ))/2. );
@@ -334,7 +336,7 @@ void bounce::setInitial(const double frac, const double width){
 }
 
 // field excursion from the origin to the infinity
-double bounce::fieldExcursion() const{
+double BounceCalculator::fieldExcursion() const{
 	double normsquared = 0.;
 	for(int iphi=0; iphi<nphi(); iphi++){
 		normsquared += pow(phi(n()-1,iphi) - phi(0,iphi), 2);
@@ -343,7 +345,7 @@ double bounce::fieldExcursion() const{
 }
 
 // derivative of scalar field at boundary
-double bounce::derivativeAtBoundary() const{
+double BounceCalculator::derivativeAtBoundary() const{
 	double normsquared = 0.;
 	for(int iphi=0; iphi<nphi(); iphi++){
 		normsquared += pow(phi(n()-1,iphi) - phi(n()-2,iphi), 2);
@@ -352,7 +354,7 @@ double bounce::derivativeAtBoundary() const{
 }
 
 // evolve the configuration
-double bounce::evolveUntil(const double tauend){
+double BounceCalculator::evolveUntil(const double tauend){
 
 	// 1 + d + sqrt(1 + d) is maximum of absolute value of eigenvalue of {{-2d, 2d},{ (1-d)/2 + 1, -2}},
 	// which is discreitzed Laplacian for n = 2. This value is 6 for d=3, and 7.23607 for d=4.
@@ -372,7 +374,7 @@ double bounce::evolveUntil(const double tauend){
 }
 
 // main routine to get the bounce solution
-int bounce::solve(){
+int BounceCalculator::solve(){
 	if(!setModelDone){
 		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
 		return -1;
@@ -479,12 +481,12 @@ int bounce::solve(){
 	return 0;
 }
 
-double bounce::getlambda() const{
+double BounceCalculator::getlambda() const{
 	return lambda;
 }
 
 // print the result
-int bounce::printBounce() const{
+int BounceCalculator::printBounce() const{
 	if(!setModelDone){
 		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
 		return -1;
@@ -522,33 +524,35 @@ int bounce::printBounce() const{
 	return 0;
 }
 
-void bounce::setSafetyfactor(double x){
+void BounceCalculator::setSafetyfactor(double x){
 	safetyfactor = x;
 }
-void bounce::setMaximumvariation(double x){
+void BounceCalculator::setMaximumvariation(double x){
 	maximumvariation = x;
 }
-void bounce::setXTV0(double x){
+void BounceCalculator::setXTV0(double x){
 	xTV0 = x;
 }
-void bounce::setWidth0(double x){
+void BounceCalculator::setWidth0(double x){
 	width0 = x;
 }
-void bounce::setDerivMax(double x){
+void BounceCalculator::setDerivMax(double x){
 	derivMax = x;
 }
-void bounce::setTend0(double x){
+void BounceCalculator::setTend0(double x){
 	tend0 = x;
 }
-void bounce::setTend1(double x){
+void BounceCalculator::setTend1(double x){
 	tend1 = x;
 }
-void bounce::setMaxN(int x){
+void BounceCalculator::setMaxN(int x){
 	maxN = x;
 }
-void bounce::verboseOn(){
+void BounceCalculator::verboseOn(){
 	verbose = true;
 }
-void bounce::verboseOff(){
+void BounceCalculator::verboseOff(){
 	verbose = false;
+}
+
 }
