@@ -15,7 +15,7 @@ class MyModel : public GenericModel{
 	double vpot (const double* phi) const{
 		return (phi[0]*phi[0]*phi[0]*phi[0] - 8.*phi[0]*phi[0]*phi[0] + 10.*phi[0]*phi[0])/10.;
 	}
-	void calcDvdphi(const double *phi) const{
+	void calcDvdphi(const double *phi, double *dvdphi) const{
 		dvdphi[0] = 0.4*phi[0]*phi[0]*phi[0] - 2.4*phi[0]*phi[0] + 2.*phi[0];
 	}
 };

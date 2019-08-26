@@ -36,17 +36,16 @@ class Scalarfield{
 };
 
 class GenericModel{
+  private:
+	int nphi_;
   public:
-	int nphi;
-	double* dvdphi;
-	GenericModel();
-	~GenericModel();
-	void setNphi(const int nphi_);
+	void setNphi(const int nphi__);
+	int nphi() const;
 	virtual double vpot(const double* phi) const {
 		std::cerr << "!!! vpot is not overrode !!!" << std::endl;
 		return 0.;
 	}
-	virtual void calcDvdphi(const double* phi) const {
+	virtual void calcDvdphi(const double* phi, double* dvdphi) const {
 		std::cerr << "!!! calcDvdphi is not overrode !!!" << std::endl;
 	}
 };

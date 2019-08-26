@@ -130,16 +130,12 @@ double Scalarfield::r_dminusoneth(const int i) const{
 
 
 // class GenericModel
-GenericModel::GenericModel(){
-	dvdphi = new double[1];
+void GenericModel::setNphi(const int nphi__){
+	nphi_ = nphi__;
 }
-GenericModel::~GenericModel(){
-	delete[] dvdphi;
-}
-void GenericModel::setNphi(const int nphi_){
-	nphi = nphi_;
-	delete[] dvdphi;
-	dvdphi = new double[nphi_];
+
+int GenericModel::nphi() const{
+	return nphi_;
 }
 
 // class BounceCalculator
@@ -172,7 +168,7 @@ BounceCalculator::~BounceCalculator(){
 // set scalar potential and its derivatives to be used for the bounce calculation
 void BounceCalculator::setModel(GenericModel * const model_){
 	model = model_;
-	setNphi(model_->nphi);
+	setNphi(model_->nphi());
 	delete[] phiTV;
 	delete[] phiFV;
 	phiTV = new double[nphi()];
@@ -224,10 +220,11 @@ double BounceCalculator::evolve(const double dtau){
 	for(int i=0; i<n()-1; i++){
 		integrand1[i] = 0.;
 		integrand2[i] = 0.;
-		model->calcDvdphi(phivec(i));
+		double dvdphi[nphi()];
+		model->calcDvdphi(phivec(i), dvdphi);
 		for(int iphi=0; iphi<nphi(); iphi++){
-			integrand1[i] += r_dminusoneth(i) * model->dvdphi[iphi] * laplacian[i][iphi];
-			integrand2[i] += r_dminusoneth(i) * model->dvdphi[iphi] * model->dvdphi[iphi];
+			integrand1[i] += r_dminusoneth(i) * dvdphi[iphi] * laplacian[i][iphi];
+			integrand2[i] += r_dminusoneth(i) * dvdphi[iphi] * dvdphi[iphi];
 		}
 	}
 	integrand1[n()-1] = 0.;
@@ -240,9 +237,10 @@ double BounceCalculator::evolve(const double dtau){
 	// RHS of Eq. 8 of 1907.02417
 	// phi at boundary is fixed to phiFV and will not be updated.
 	for(int i=0; i<n()-1; i++){
-		model->calcDvdphi(phivec(i));
+		double dvdphi[nphi()];
+		model->calcDvdphi(phivec(i), dvdphi);
 		for(int iphi=0; iphi<nphi(); iphi++){
-			RHS[i][iphi] = laplacian[i][iphi] - lambda*model->dvdphi[iphi];
+			RHS[i][iphi] = laplacian[i][iphi] - lambda*dvdphi[iphi];
 		}
 	}
 
@@ -269,14 +267,16 @@ double BounceCalculator::evolve(const double dtau){
 
 // RHS of Eq. 8 of 1907.02417
 double BounceCalculator::residual(const int i, const int iphi) const{
-	model->calcDvdphi(phivec(i));
-	return lap(i,iphi) - lambda*model->dvdphi[iphi];
+	double dvdphi[nphi()];
+	model->calcDvdphi(phivec(i), dvdphi);
+	return lap(i,iphi) - lambda*dvdphi[iphi];
 }
 
 // RHS of EOM for the bounce solution
 double BounceCalculator::residualBounce(const int i, const int iphi) const{
-	model->calcDvdphi(phivec(i));
-	return lap(i,iphi)/lambda - model->dvdphi[iphi];
+	double dvdphi[nphi()];
+	model->calcDvdphi(phivec(i), dvdphi);
+	return lap(i,iphi)/lambda - dvdphi[iphi];
 }
 
 // Euclidean action in d-dimensional space 

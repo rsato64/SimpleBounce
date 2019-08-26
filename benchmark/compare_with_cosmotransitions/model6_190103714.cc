@@ -49,7 +49,7 @@ class MyModel : public GenericModel{
 	}
 
 	// derivative of potential of scalar field(s)
-	void calcDvdphi(const double* phi) const {
+	void calcDvdphi(const double* phi, double* dvdphi) const {
 		double r1 = (
 			c0*(phi[0]-1.)*(phi[0]-1.)
 			+ c1*(phi[1]-1.)*(phi[1]-1.)

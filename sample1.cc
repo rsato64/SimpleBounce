@@ -13,7 +13,7 @@ class MyModel : public GenericModel{
 		return phi[0]*phi[0]/2. - phi[0]*phi[0]*phi[0]/3.;
 	}
 	// first derivative(s) of potential
-	void calcDvdphi(const double *phi) const{
+	void calcDvdphi(const double *phi, double *dvdphi) const{
 		dvdphi[0] = phi[0] - phi[0]*phi[0];
 	}
 };
