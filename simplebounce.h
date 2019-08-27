@@ -5,6 +5,7 @@ namespace simplebounce{
 
 double integral(const double* integrand, const double dr, const int n);
 
+////////////////////////////////////////////////////////////////////////////////
 class Scalarfield{
   private:
 	int n_, nphi_, dim_;
@@ -35,6 +36,7 @@ class Scalarfield{
 	double r_dminusoneth(const int i) const;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 class GenericModel{
   private:
 	int nphi_;
@@ -51,6 +53,7 @@ class GenericModel{
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
 class BounceCalculator : public Scalarfield {
   private:
 	double lambda;
