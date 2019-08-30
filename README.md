@@ -27,4 +27,4 @@ You can compare the results and performance with [CosmoTransitions](http://clwai
 
 ## References
 * R. Sato, "A Simple Gradient Flow Equation for the Bounce Solution," [arXiv:1907.02417 \[hep-ph\]](https://arxiv.org/abs/1907.02417)
-* R. Sato, ["SimpleBounce : a simple package for the false vacuum decay."](https://www.dropbox.com/s/soopwce5gibxq16/manual.pdf?dl=0)
+* R. Sato, "SimpleBounce : a simple package for the false vacuum decay." [arXiv:1908.10868 \[hep-ph\]](https://arxiv.org/abs/1908.10868)
