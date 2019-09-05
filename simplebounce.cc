@@ -88,7 +88,13 @@ void Scalarfield::updateInfo(){
 
 // set the radius at the boundary
 void Scalarfield::setRmax(const double rmax__){
-	rmax_ = rmax__;
+	if(rmax__ > 0.){
+		rmax_ = rmax__;
+	} else {
+		std::cerr << "!!! rmax should be positive value !!!"<< std::endl;
+		std::cerr << "!!! rmax is set to 1. !!!"<< std::endl;
+		rmax_ = 1.;
+	}
 	dr_ = rmax_ / (n_-1.);
 	drinv_ = 1./dr_;
 	updateInfo();
@@ -360,6 +366,7 @@ int BounceCalculator::setVacuum(const double *phiTV_, const double *phiFV_){
 		std::cerr << "!!! energy of true vacuum is larger than false vacuum !!!" << std::endl;
 		return -1;
 	}
+
 	for(int iphi=0; iphi<nphi(); iphi++){
 		phiTV[iphi] = phiTV_[iphi];
 	}
