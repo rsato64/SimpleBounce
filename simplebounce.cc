@@ -498,7 +498,7 @@ int BounceCalculator::solve(){
 	}
 	while(true){
 
-		double deriv = evolveUntil(tend0);
+		double deriv = evolveUntil(tend0*rmax()*rmax());
 		if(verbose){
 			std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
 			std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
@@ -506,7 +506,7 @@ int BounceCalculator::solve(){
 		}
 
 		// dphi/dr at the boundary is small enough
-		if( deriv  < derivMax) {
+		if( deriv  < derivMax/rmax() ) {
 			break;
 		// dphi/dr at the boundary is NOT small enough
 		} else {
@@ -544,7 +544,7 @@ int BounceCalculator::solve(){
 		std::cerr << "minimizing the kinetic energy ..." << std::endl;
 	}
 
-	evolveUntil(tend1);
+	evolveUntil(tend1*rmax()*rmax());
 
 	if(verbose){
 		std::cerr << "done." << std::endl;
