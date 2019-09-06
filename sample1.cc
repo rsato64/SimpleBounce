@@ -6,6 +6,7 @@ using namespace simplebounce;
 class MyModel : public GenericModel{
   public:
 	MyModel(){
+		// number of scalar field(s)
 		setNphi(1);
 	}
 	// potential for scalar field(s)
