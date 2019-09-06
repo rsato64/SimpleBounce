@@ -244,14 +244,14 @@ void BounceCalculator::setModel(GenericModel * const model_){
 // kinetic energy of the configuration
 // \int_0^\infty dr r^{d-1} \sum_i (-1/2) \phi_i \nabla^2\phi_i
 double BounceCalculator::t() const {
-	double integrand[n()];
-	for(int i=0; i<n(); i++){
+	double integrand[n()-1];
+	for(int i=0; i<n()-1; i++){
 		integrand[i] = 0.;
 		for(int iphi=0; iphi<nphi(); iphi++){
 			integrand[i] += r_dminusoneth(i) * -0.5 * phi(i,iphi) * lap(i,iphi);
 		}
 	}
-	return integral(integrand, dr(), n());
+	return integral(integrand, dr(), n()-1);
 }
 
 // potential energy of the configuration
