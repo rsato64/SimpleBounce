@@ -342,18 +342,36 @@ double BounceCalculator::residualBounce(const int i, const int iphi) const{
 	return lap(i,iphi)/lambda - dvdphi[iphi];
 }
 
+// Kinetic energy of the bounce
+// The bounce configuration can be obtained from Eq. 15 of 1907.02417
+double BounceCalculator::tBounce() const {
+	double area = dim() * pow(M_PI,dim()/2.) / tgamma(dim()/2.+1.);
+	return area * pow(lambda, dim()/2.-1.)*t();
+}
+
+// Potential energy of the bounce
+// The bounce configuration can be obtained from Eq. 15 of 1907.02417
+double BounceCalculator::vBounce() const {
+	double area = dim() * pow(M_PI,dim()/2.) / tgamma(dim()/2.+1.);
+	return area * pow(lambda, dim()/2.)*v();
+}
+
 // Euclidean action in d-dimensional space 
 // The bounce configuration can be obtained from Eq. 15 of 1907.02417
 double BounceCalculator::action() const{
-	double area = dim() * pow(M_PI,dim()/2.) / tgamma(dim()/2.+1.);
-	double rescaled_t_plus_v = pow(lambda, dim()/2.-1.)*t() + pow(lambda, dim()/2.)*v();
-	return area * rescaled_t_plus_v;
+	return tBounce() + vBounce();
+}
+
+// this value should be one for the bounce solution
+double BounceCalculator::oneIfBounce() const{
+	return (2.-dim())/dim() * tBounce() / vBounce();
 }
 
 // boucne solution from scale transformation
 double BounceCalculator::rBounce(const int i) const{
 	return sqrt(lambda)*dr()*i;
 }
+
 
 // set the posiiton of a point which gives V < V_FV and false vacua
 int BounceCalculator::setVacuum(const double *phiTV_, const double *phiFV_){
@@ -503,55 +521,50 @@ int BounceCalculator::solve(){
 	if(verbose){
 		std::cerr << "probing the size of the bounce configuration ..." << std::endl;
 	}
-	while(true){
 
-		double deriv = evolveUntil(tend0*rmax()*rmax());
-		if(verbose){
-			std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
-			std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
-			std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
-		}
-
-		// dphi/dr at the boundary is small enough
-		if( deriv  < derivMax/rmax() ) {
-			break;
-		// dphi/dr at the boundary is NOT small enough
-		} else {
-
-			// take smaller bounce configuration
+	bool finished = false;
+	while(!finished){
+		for(int i=0; i<tend1/tend0; i++){
+			finished = true;
+			double deriv = evolveUntil(tend0*rmax()*rmax());
 			if(verbose){
-				std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
+				std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
+				std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
+				std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
 			}
-			xTV = xTV * 0.5;
-			width = width * 0.5;
-			if(width*n() < 1.) {
+			// if dphi/dr at the boundary is NOT small enough
+			if( deriv > derivMax/rmax() ) {
+				// take smaller bounce configuration
 				if(verbose){
-					std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
+					std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
 				}
-				setN(2*n());
-			}
+				xTV = xTV * 0.5;
+				width = width * 0.5;
+				if(width*n() < 1.) {
+					if(verbose){
+						std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
+					}
+					setN(2*n());
+				}
 
-			// retry by using new initial condition
-			setInitial(xTV, width);
-			if(verbose){
-				std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
-				std::cerr << "\t" << "xWidth:\t" << width << std::endl;
-				std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
-				std::cerr << "\t" << "n :\t" << n() << std::endl;
+				// retry by using new initial condition
+				setInitial(xTV, width);
+				if(verbose){
+					std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
+					std::cerr << "\t" << "xWidth:\t" << width << std::endl;
+					std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
+					std::cerr << "\t" << "n :\t" << n() << std::endl;
+				}
+				if(n()>maxN){
+					std::cerr << "!!! n became too large !!!" << std::endl;
+					return -1;
+				}
+
+				finished = false;
+				break;
 			}
 		}
-
-		if(n()>maxN){
-			std::cerr << "!!! n became too large !!!" << std::endl;
-			return -1;
-		}
 	}
-
-	if(verbose){
-		std::cerr << "minimizing the kinetic energy ..." << std::endl;
-	}
-
-	evolveUntil(tend1*rmax()*rmax());
 
 	if(verbose){
 		std::cerr << "done." << std::endl;
@@ -603,6 +616,54 @@ int BounceCalculator::printBounce() const{
 	return 0;
 }
 
+// print the result
+int BounceCalculator::printBounceDetails() const{
+	if(!setModelDone){
+		std::cerr << "!!! model has not been set yet !!!"<< std::endl;
+		return -1;
+	}
+	if(!setVacuumDone){
+		std::cerr << "!!! correct vacua have not been set yet !!!"<< std::endl;
+		return -1;
+	}
+
+	std::cout << "Bounce: " << std::endl;
+	std::cout << "\tS =\t" << action() << std::endl;
+	std::cout << "\tT =\t" << tBounce() << std::endl;
+	std::cout << "\tV =\t" << vBounce() << std::endl;
+
+	std::cout << "\tr = 0 : ";
+	std::cout << "(";
+	for(int iphi=0; iphi<nphi()-1; iphi++){
+		std::cout << phi(0,iphi) << ", ";
+	}
+	std::cout << phi(0,nphi()-1)<< ")\t";
+	std::cout << "V = " << model->vpot(phivec(0)) << std::endl;
+
+	std::cout << "\tr = " << rBounce(n()-1) << " : ";
+	std::cout << "(";
+	for(int iphi=0; iphi<nphi()-1; iphi++){
+		std::cerr << phi(n()-1,iphi) << ", ";
+	}
+	std::cout << phi(n()-1,nphi()-1) << ")\t";
+	std::cout << "V = " << model->vpot(phivec(n()-1)) << std::endl;
+
+	std::cout << std::endl;
+
+	std::cout << "Before rescaling: " << std::endl;
+	std::cout << "\tT =\t" << t() << std::endl;
+	std::cout << "\tV =\t" << v() << std::endl;
+	std::cout << "\tlambda =\t" << lambda << std::endl;
+	std::cout << std::endl;
+
+
+	std::cout << "Goodness of the solution: " << std::endl;
+	std::cout << "\tderiv\t" << derivativeAtBoundary()/fieldExcursion()*rmax() << std::endl;
+	std::cout << "\t(2-d)/d*T/V =\t" << oneIfBounce() << std::endl;
+
+
+	return 0;
+}
 
 void BounceCalculator::setSafetyfactor(double x){
 	safetyfactor = x;

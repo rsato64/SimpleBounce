@@ -84,7 +84,10 @@ class BounceCalculator : public Scalarfield {
 	double evolve(const double ds);
 	double residual(const int i, const int iphi) const;
 	double residualBounce(const int i, const int iphi) const;
+	double tBounce() const;
+	double vBounce() const;
 	double action() const;
+	double oneIfBounce() const;
 	double rBounce(const int i) const;
 	int setVacuum(const double *phiTV_, const double *phiFV_);
 	void setInitial(const double frac, const double width);
@@ -94,6 +97,7 @@ class BounceCalculator : public Scalarfield {
 	int solve();
 	double getlambda() const;
 	int printBounce() const;
+	int printBounceDetails() const;
 
 	void setSafetyfactor(double x);
 	void setMaximumvariation(double x);
