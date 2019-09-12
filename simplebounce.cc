@@ -522,47 +522,45 @@ int BounceCalculator::solve(){
 		std::cerr << "probing the size of the bounce configuration ..." << std::endl;
 	}
 
-	bool finished = false;
-	while(!finished){
-		for(int i=0; i<tend1/tend0; i++){
-			finished = true;
-			double deriv = evolveUntil(tend0*rmax()*rmax());
+	int icount = 0;
+	int countmax = tend1/tend0;
+	while(icount < countmax){
+		double deriv = evolveUntil(tend0*rmax()*rmax());
+		if(verbose){
+			std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
+			std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
+			std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
+		}
+		// if dphi/dr at the boundary is NOT small enough
+		if( deriv > derivMax/rmax() ) {
+			// take smaller bounce configuration
 			if(verbose){
-				std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
-				std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
-				std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
+				std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
 			}
-			// if dphi/dr at the boundary is NOT small enough
-			if( deriv > derivMax/rmax() ) {
-				// take smaller bounce configuration
+			xTV = xTV * 0.5;
+			width = width * 0.5;
+			if(width*n() < 1.) {
 				if(verbose){
-					std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
+					std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
 				}
-				xTV = xTV * 0.5;
-				width = width * 0.5;
-				if(width*n() < 1.) {
-					if(verbose){
-						std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
-					}
-					setN(2*n());
-				}
-
-				// retry by using new initial condition
-				setInitial(xTV, width);
-				if(verbose){
-					std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
-					std::cerr << "\t" << "xWidth:\t" << width << std::endl;
-					std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
-					std::cerr << "\t" << "n :\t" << n() << std::endl;
-				}
-				if(n()>maxN){
-					std::cerr << "!!! n became too large !!!" << std::endl;
-					return -1;
-				}
-
-				finished = false;
-				break;
+				setN(2*n());
 			}
+
+			// retry by using new initial condition
+			setInitial(xTV, width);
+			if(verbose){
+				std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
+				std::cerr << "\t" << "xWidth:\t" << width << std::endl;
+				std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
+				std::cerr << "\t" << "n :\t" << n() << std::endl;
+			}
+			if(n()>maxN){
+				std::cerr << "!!! n became too large !!!" << std::endl;
+				return -1;
+			}
+			icount = 0;
+		} else {
+			icount++;
 		}
 	}
 
