@@ -429,6 +429,12 @@ void BounceCalculator::setInitial(const double frac, const double width){
 	for(int iphi=0; iphi<nphi(); iphi++){
 		setPhi(n()-1, iphi, phiFV[iphi]);
 	}
+	if(verbose){
+		std::cerr << "\t" << "xTrueVacuum:\t" << frac << std::endl;
+		std::cerr << "\t" << "xWidth:\t" << width << std::endl;
+		std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
+		std::cerr << "\t" << "n :\t" << n() << std::endl;
+	}
 }
 
 // field excursion from the origin to the infinity
@@ -450,23 +456,24 @@ double BounceCalculator::derivativeAtBoundary() const{
 }
 
 // evolve the configuration from tau = 0 to tau = tauend
-double BounceCalculator::evolveUntil(const double tauend){
+int BounceCalculator::evolveUntil(const double tauend){
 
 	// 1 + d + sqrt(1 + d) is maximum of absolute value of eigenvalue of {{-2d, 2d},{ (1-d)/2 + 1, -2}},
 	// which is discreitzed Laplacian for n = 2. This value is 6 for d=3, and 7.23607 for d=4.
 	// The numerical value of maximum of absolute value of eigenvalue of discretized Laplacian for large n is 6 for d=3, and 7.21417 for d=4
-	double tau = 0.;
 	double dtau = 2./(1. + dim() + sqrt(1.+dim())) * pow(dr(),2) * safetyfactor;
 
 	if(verbose){
 		std::cerr << "evolve until tau = " << tauend << ", (dtau = " << dtau << ")" << std::endl;
 	}
 
-	while(tau<tauend){
+	for(double tau=0.; tau<tauend; tau+=dtau){
 		evolve(dtau);
-		tau += dtau;
+		if( derivativeAtBoundary()*rmax()/fieldExcursion() > derivMax ) {
+			return -1;
+		}
 	}
-	return derivativeAtBoundary()/fieldExcursion();
+	return 0;
 }
 
 // main routine to get the bounce solution
@@ -481,28 +488,15 @@ int BounceCalculator::solve(){
 		return -1;
 	}
 
-
 	// make the bubble wall thin to get negative potential energy 
+	// if V is positive, make the wall thin.
 	if(verbose){
 		std::cerr << "probing a thickness to get negative V[phi] ..." << std::endl;
 	}
 	double xTV = xTV0;
 	double width = width0;
-	while(true){
-		setInitial(xTV, width);
-		if(verbose){
-			std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
-			std::cerr << "\t" << "xWidth:\t" << width << std::endl;
-			std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
-			std::cerr << "\t" << "n :\t" << n() << std::endl;
-		}
-
-		// OK if V is negative
-		if(v() < 0.) {
-			break;
-		}
-
-		// if V is positive, make the wall thin.
+	setInitial(xTV, width);
+	while(v() > 0.){
 		width = width * 0.5;
 		if(width*n() < 1.) {
 			if(verbose){
@@ -510,62 +504,36 @@ int BounceCalculator::solve(){
 			}
 			setN(2*n());
 		}
-
 		if(n()>maxN){
 			std::cerr << "!!! n became too large !!!" << std::endl;
 			return -1;
 		}
+		setInitial(xTV, width);
 	}
 
 	// make the size of the bubble smaller enough than the size of the sphere
+	// if dphi/dr at the boundary becomes too large during flow, take smaller bounce configuration
 	if(verbose){
 		std::cerr << "probing the size of the bounce configuration ..." << std::endl;
 	}
-
-	int icount = 0;
-	int countmax = tend1/tend0;
-	while(icount < countmax){
-		double deriv = evolveUntil(tend0*rmax()*rmax());
+	while( evolveUntil(tend1*rmax()*rmax())!=0 ) {
 		if(verbose){
-			std::cerr << "\t" << "deriv :\t" << deriv << std::endl;
-			std::cerr << "\t" << "field excursion :\t" << fieldExcursion() << std::endl;
-			std::cerr << "\t" << "derivative at boundary:\t" << derivativeAtBoundary() << std::endl;
+			std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
 		}
-		// if dphi/dr at the boundary is NOT small enough
-		if( deriv > derivMax/rmax() ) {
-			// take smaller bounce configuration
+		xTV = xTV * 0.5;
+		width = width * 0.5;
+		if(width*n() < 1.) {
 			if(verbose){
-				std::cerr << "the size of the bounce is too large. initial condition is scale transformed." << std::endl;
+				std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
 			}
-			xTV = xTV * 0.5;
-			width = width * 0.5;
-			if(width*n() < 1.) {
-				if(verbose){
-					std::cerr << "the current mesh is too sparse. increase the number of points." << std::endl;
-				}
-				setN(2*n());
-			}
-
-			// retry by using new initial condition
-			setInitial(xTV, width);
-			if(verbose){
-				std::cerr << "\t" << "xTrueVacuum:\t" << xTV << std::endl;
-				std::cerr << "\t" << "xWidth:\t" << width << std::endl;
-				std::cerr << "\t" << "V[phi] :\t" << v() << std::endl;
-				std::cerr << "\t" << "n :\t" << n() << std::endl;
-			}
-			if(n()>maxN){
-				std::cerr << "!!! n became too large !!!" << std::endl;
-				return -1;
-			}
-			icount = 0;
-		} else {
-			icount++;
+			setN(2*n());
 		}
-	}
-
-	if(verbose){
-		std::cerr << "done." << std::endl;
+		// retry by using new initial condition
+		setInitial(xTV, width);
+		if(n()>maxN){
+			std::cerr << "!!! n became too large !!!" << std::endl;
+			return -1;
+		}
 	}
 
 	return 0;

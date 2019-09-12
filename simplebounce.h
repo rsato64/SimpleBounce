@@ -93,7 +93,7 @@ class BounceCalculator : public Scalarfield {
 	void setInitial(const double frac, const double width);
 	double fieldExcursion() const;
 	double derivativeAtBoundary() const;
-	double evolveUntil(const double tend);
+	int evolveUntil(const double tend);
 	int solve();
 	double getlambda() const;
 	int printBounce() const;
