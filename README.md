@@ -2,9 +2,9 @@ SimpleBounce
 =============
 
 ## Overview
-The SimpleBounce package calcualtes the Euclidean action for the bounce solution which contribute to the false vacuum decay.
+The SimpleBounce package calcualtes the Euclidean action of the bounce solution which contributes to the false vacuum decay.
 The algorithm is based on the flow equation which is proposed in [arXiv:1907.02417](https://arxiv.org/abs/1907.02417).
-For more details, please read [the documentation](https://www.dropbox.com/s/9ydtrjlsq480823/manual.pdf?dl=0).
+For more details of the code, please read [arXiv:1908.10868](https://arxiv.org/abs/1908.10868).
 
 ## How to use
 The following sample codes are complied by ``make``.
@@ -26,5 +26,5 @@ You can compare the results and performance with [CosmoTransitions](http://clwai
 ``run.sh`` plots the results.
 
 ## References
-* R. Sato, "A Simple Gradient Flow Equation for the Bounce Solution," [arXiv:1907.02417 \[hep-ph\]](https://arxiv.org/abs/1907.02417)
-* R. Sato, "SimpleBounce : a simple package for the false vacuum decay." [arXiv:1908.10868 \[hep-ph\]](https://arxiv.org/abs/1908.10868)
+* R. Sato, "A Simple Gradient Flow Equation for the Bounce Solution," [arXiv:1907.02417 \[hep-ph\]](https://arxiv.org/abs/1907.02417), [Phys.Rev.D 101 (2020) 1, 016012](https://doi.org/10.1103/PhysRevD.101.016012)
+* R. Sato, "SimpleBounce : a simple package for the false vacuum decay." [arXiv:1908.10868 \[hep-ph\]](https://arxiv.org/abs/1908.10868), [Comput.Phys.Commun. 258 (2021) 107566](https://doi.org/10.1016/j.cpc.2020.107566)
